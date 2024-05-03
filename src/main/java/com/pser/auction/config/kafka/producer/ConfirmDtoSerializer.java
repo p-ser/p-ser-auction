@@ -1,4 +1,4 @@
-package com.pser.auction.producer;
+package com.pser.auction.config.kafka.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pser.auction.dto.ConfirmDto;

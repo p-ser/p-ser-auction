@@ -1,12 +1,13 @@
-package com.pser.auction.producer;
+package com.pser.auction.config.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pser.auction.dto.RefundDto;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.apache.kafka.common.errors.SerializationException;
-import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.common.serialization.Deserializer;
 
-public class RefundDtoSerializer implements Serializer<RefundDto> {
+public class RefundDtoDeserializer implements Deserializer<RefundDto> {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -14,14 +15,14 @@ public class RefundDtoSerializer implements Serializer<RefundDto> {
     }
 
     @Override
-    public byte[] serialize(String topic, RefundDto data) {
+    public RefundDto deserialize(String topic, byte[] data) {
         try {
             if (data == null) {
                 return null;
             }
-            return objectMapper.writeValueAsBytes(data);
+            return objectMapper.readValue(new String(data, StandardCharsets.UTF_8), RefundDto.class);
         } catch (Exception e) {
-            throw new SerializationException("직렬화 오류");
+            throw new SerializationException("Error when deserializing byte[] to MessageDto");
         }
     }
 
