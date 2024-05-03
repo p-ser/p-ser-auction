@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auction-deployment
+spec:
+  selector:
+    matchLabels:
+      app: p-ser-auction
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: p-ser-auction
+    spec:
+      volumes:
+        - name: app-config
+          configMap:
+            name: app-config
+      containers:
+        - name: auction-container
+          image: amanecopse/p-ser-auction
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - mountPath: "/share"
+              name: app-config
