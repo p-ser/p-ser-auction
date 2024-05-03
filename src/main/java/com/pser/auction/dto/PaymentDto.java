@@ -13,6 +13,8 @@ public class PaymentDto {
     private String message;
     private Response response;
 
+    @Getter
+    @Setter
     public static class Response {
         @JsonAlias("amount")
         private Integer amount;
