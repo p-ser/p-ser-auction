@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,26 +29,24 @@ import lombok.Setter;
 )
 public class Deposit extends BaseEntity {
     @Column(nullable = false)
-    private long user_id;
+    private long userId;
 
     @ManyToOne(cascade = {CascadeType.PERSIST}, optional = false)
     @JoinColumn(nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Auction auction;
 
-    @Column(nullable = false)
-    private String merchantUid;
+    @Column(nullable = false, unique = true)
+    private String merchantUid = UUID.randomUUID().toString();
 
-    @Column(nullable = false)
     private String impUid;
 
     @Column(nullable = false)
     private DepositStatusEnum status = DepositStatusEnum.PAYMENT_AWAITING;
 
     @Builder
-    public Deposit(long user_id, Auction auction, String merchantUid, String impUid, DepositStatusEnum status) {
-        this.user_id = user_id;
+    public Deposit(long userId, Auction auction, String impUid, DepositStatusEnum status) {
+        this.userId = userId;
         this.auction = auction;
-        this.merchantUid = merchantUid;
         this.impUid = impUid;
         this.status = Optional.ofNullable(status).orElse(this.status);
     }
