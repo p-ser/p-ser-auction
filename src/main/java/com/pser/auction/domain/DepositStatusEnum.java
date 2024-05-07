@@ -11,7 +11,7 @@ import lombok.Getter;
 public enum DepositStatusEnum {
     PAYMENT_AWAITING(0),
     CONFIRM_AWAITING(1),
-    PAID(2),
+    CONFIRMED(2),
     REFUND_AWAITING(3),
     REFUNDED(4);
 
