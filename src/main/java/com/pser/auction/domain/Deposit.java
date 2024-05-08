@@ -1,5 +1,6 @@
 package com.pser.auction.domain;
 
+import com.pser.auction.domain.event.StatusHolderEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
@@ -9,7 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +27,7 @@ import lombok.Setter;
                 )
         }
 )
-public class Deposit extends BaseEntity {
+public class Deposit extends StatusHolderEntity<DepositStatusEnum> {
     @Column(nullable = false)
     private long userId;
 
@@ -38,16 +38,15 @@ public class Deposit extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String merchantUid = UUID.randomUUID().toString();
 
+    @Column(unique = true)
     private String impUid;
 
     @Column(nullable = false)
     private DepositStatusEnum status = DepositStatusEnum.PAYMENT_AWAITING;
 
     @Builder
-    public Deposit(long userId, Auction auction, String impUid, DepositStatusEnum status) {
+    public Deposit(long userId, Auction auction) {
         this.userId = userId;
         this.auction = auction;
-        this.impUid = impUid;
-        this.status = Optional.ofNullable(status).orElse(this.status);
     }
 }
