@@ -48,6 +48,10 @@ dependencies {
 
 	// Vavr
 	implementation 'io.vavr:vavr:0.10.4'
+
+	// Mapstruct
+	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 }
 
 tasks.named('test') {
