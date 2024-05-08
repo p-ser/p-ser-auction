@@ -2,6 +2,7 @@ package com.pser.auction.exception;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.pser.auction.common.response.ApiResponse;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -50,6 +51,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<ApiResponse<Void>> handleBadRequestException(RuntimeException exception) {
         logger.error("message", exception);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(exception.getMessage()));
+    }
+
+    @ExceptionHandler({NoSuchElementException.class})
+    ResponseEntity<ApiResponse<Void>> handleNotFoundException(RuntimeException exception) {
+        logger.error("message", exception);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(exception.getMessage()));
     }
 
