@@ -10,5 +10,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class DepositCreateRequest {
     @NotNull
-    private String tid;
+    private long userId;
+
+    @NotNull
+    private long auctionId;
 }
