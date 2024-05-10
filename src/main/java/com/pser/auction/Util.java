@@ -1,9 +1,21 @@
 package com.pser.auction;
 
+import java.util.Date;
 import java.util.Objects;
 import org.springframework.core.env.Environment;
 
 public class Util {
+    public static long getNowMilliseconds() {
+        Date now = new Date();
+        return now.getTime();
+    }
+
+    public static Date afterHours(int hours) {
+        long nowMilliseconds = getNowMilliseconds();
+        int offsetMilliseconds = 1000 * 60 * 60 * hours;
+        return new Date(nowMilliseconds + offsetMilliseconds);
+    }
+
     public static int getIntProperty(Environment env, String key) {
         String value = Objects.requireNonNull(env.getProperty(key));
         return Integer.parseInt(value);
