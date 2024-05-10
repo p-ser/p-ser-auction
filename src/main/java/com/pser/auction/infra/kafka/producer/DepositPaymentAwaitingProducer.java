@@ -1,4 +1,4 @@
-package com.pser.auction.producer;
+package com.pser.auction.infra.kafka.producer;
 
 import com.pser.auction.config.kafka.KafkaTopics;
 import lombok.RequiredArgsConstructor;

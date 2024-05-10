@@ -1,4 +1,4 @@
-package com.pser.auction.quartz;
+package com.pser.auction.infra.quartz;
 
 import com.pser.auction.application.DepositService;
 import com.pser.auction.domain.DepositStatusEnum;

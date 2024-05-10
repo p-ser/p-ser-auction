@@ -1,9 +1,8 @@
-package com.pser.auction.consumer;
+package com.pser.auction.infra.kafka.consumer;
 
 import com.pser.auction.Util;
 import com.pser.auction.config.kafka.KafkaTopics;
-import com.pser.auction.quartz.PendingDepositCleanerJob;
-import java.util.Date;
+import com.pser.auction.infra.quartz.PendingDepositCleanerJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobBuilder;

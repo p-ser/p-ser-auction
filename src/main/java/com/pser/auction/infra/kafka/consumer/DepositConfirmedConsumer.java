@@ -1,4 +1,4 @@
-package com.pser.auction.consumer;
+package com.pser.auction.infra.kafka.consumer;
 
 import com.pser.auction.application.DepositService;
 import com.pser.auction.config.kafka.KafkaTopics;
