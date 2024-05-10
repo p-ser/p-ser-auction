@@ -1,5 +1,6 @@
 package com.pser.auction.dto;
 
+import com.pser.auction.domain.Auction;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,4 +15,6 @@ public class DepositCreateRequest {
 
     @NotNull
     private long auctionId;
+
+    private Auction auction;
 }

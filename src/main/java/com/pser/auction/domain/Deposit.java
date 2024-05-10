@@ -4,6 +4,7 @@ import com.pser.auction.domain.event.StatusHolderEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
@@ -42,11 +43,16 @@ public class Deposit extends StatusHolderEntity<DepositStatusEnum> {
     private String impUid;
 
     @Column(nullable = false)
+    private int price;
+
+    @Column(nullable = false)
+    @Convert(converter = DepositStatusEnumConverter.class)
     private DepositStatusEnum status = DepositStatusEnum.PAYMENT_AWAITING;
 
     @Builder
-    public Deposit(long userId, Auction auction) {
+    public Deposit(long userId, Auction auction, int price) {
         this.userId = userId;
         this.auction = auction;
+        this.price = price;
     }
 }
