@@ -1,0 +1,113 @@
+package com.pser.auction.application;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+
+import com.pser.auction.dao.AuctionDao;
+import com.pser.auction.dao.DepositDao;
+import com.pser.auction.domain.Auction;
+import com.pser.auction.domain.AuctionStatusEnum;
+import com.pser.auction.domain.Deposit;
+import com.pser.auction.domain.DepositStatusEnum;
+import com.pser.auction.dto.DepositCreateRequest;
+import com.pser.auction.dto.DepositMapper;
+import com.pser.auction.dto.DepositMapperImpl;
+import com.pser.auction.infra.kafka.producer.DepositConfirmAwaitingProducer;
+import com.pser.auction.infra.kafka.producer.DepositPaymentAwaitingProducer;
+import com.pser.auction.infra.kafka.producer.DepositRefundAwaitingProducer;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@Slf4j
+@DisplayName("Deposit Service 테스트")
+@ExtendWith(MockitoExtension.class)
+public class DepositServiceTest {
+    @InjectMocks
+    DepositService depositService;
+
+    @Spy
+    DepositMapper depositMapper = new DepositMapperImpl();
+
+    @Mock
+    AuctionDao auctionDao;
+
+    @Mock
+    DepositDao depositDao;
+
+    @Mock
+    DepositConfirmAwaitingProducer depositConfirmAwaitingProducer;
+
+    @Mock
+    DepositRefundAwaitingProducer depositRefundAwaitingProducer;
+
+    @Mock
+    DepositPaymentAwaitingProducer depositPaymentAwaitingProducer;
+
+    DepositCreateRequest request = DepositCreateRequest.builder()
+            .auctionId(1L)
+            .userId(10L)
+            .build();
+
+    Auction auction = Auction.builder()
+            .build();
+
+    Deposit deposit = Deposit.builder()
+            .auction(auction)
+            .userId(request.getUserId())
+            .build();
+
+
+    @Test
+    @DisplayName("보증금 생성 또는 결제 진행중인 보증금 가져오기")
+    public void getOrSave() {
+        Deposit spiedDeposit = spy(deposit);
+        auction.setStatus(AuctionStatusEnum.ON_GOING);
+        given(spiedDeposit.getId()).willReturn(123L);
+        given(auctionDao.findById(any())).willReturn(Optional.of(auction));
+        given(depositDao.save(any())).willReturn(spiedDeposit);
+
+        depositService.getOrSave(request);
+
+        then(auctionDao).should().findById(any(Long.class));
+        then(depositMapper).should().toEntity(any(DepositCreateRequest.class));
+        then(depositDao).should().save(any(Deposit.class));
+    }
+
+    @Test
+    @DisplayName("결제 대기 상태 보증금 체크")
+    public void checkStatusGivenPaymentAwaiting() {
+        Deposit spiedDeposit = spy(deposit);
+        DepositService spiedDepositService = spy(depositService);
+        given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.PAYMENT_AWAITING);
+        willDoNothing().given(spiedDepositService).updateToConfirmAwaiting(any());
+        given(depositDao.findById(any())).willReturn(Optional.of(spiedDeposit));
+
+        spiedDepositService.checkStatus(1L, "");
+
+        then(spiedDepositService).should().updateToConfirmAwaiting(any());
+    }
+
+    @Test
+    @DisplayName("결제 대기 상태가 아닌 보증금 체크")
+    public void checkStatusGivenNotPaymentAwaiting() {
+        Deposit spiedDeposit = spy(deposit);
+        DepositService spiedDepositService = spy(depositService);
+        given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.CONFIRM_AWAITING);
+        given(depositDao.findById(any())).willReturn(Optional.of(spiedDeposit));
+
+        spiedDepositService.checkStatus(1L, "");
+
+        then(spiedDepositService).should(never()).updateToConfirmAwaiting(any());
+    }
+}
