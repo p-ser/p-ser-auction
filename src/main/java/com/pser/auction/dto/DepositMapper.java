@@ -10,5 +10,6 @@ public interface DepositMapper {
     @Mapping(source = "auction.depositPrice", target = "price")
     Deposit toEntity(DepositCreateRequest request);
 
+    @Mapping(source = "auction.id", target = "auctionId")
     DepositResponse toResponse(Deposit deposit);
 }
