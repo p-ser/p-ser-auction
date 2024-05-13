@@ -15,5 +15,5 @@ public interface DepositDao extends JpaRepository<Deposit, Long> {
     Optional<Deposit> findByUserIdAndAuctionIdAndStatusIn(Long userId, Long auctionId, List<DepositStatusEnum> statusEnums);
 
     @NonNull
-    Page<Deposit> findAll(@NonNull Pageable pageable);
+    Page<Deposit> findAllByAuctionId(Long auctionId, @NonNull Pageable pageable);
 }
