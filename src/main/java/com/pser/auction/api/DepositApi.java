@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auctions/{auctionId}")
+@RequestMapping("/auctions/{auctionId}/deposits")
 public class DepositApi {
     private final DepositService depositService;
 
@@ -30,7 +30,7 @@ public class DepositApi {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
-    @PostMapping("/deposits")
+    @PostMapping
     public ResponseEntity<ApiResponse<DepositResponse>> save(@PathVariable long auctionId,
                                                              @RequestBody DepositCreateRequest request) {
         request.setAuctionId(auctionId);
@@ -38,7 +38,7 @@ public class DepositApi {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PostMapping("/deposits/{depositId}/check")
+    @PostMapping("/{depositId}/check")
     public ResponseEntity<ApiResponse<DepositStatusEnum>> checkStatus(@PathVariable long auctionId,
                                                                       @PathVariable long depositId,
                                                                       @RequestBody String impUid) {
