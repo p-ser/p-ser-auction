@@ -11,7 +11,7 @@ import lombok.Getter;
 
 @Getter
 public enum DepositStatusEnum implements StatusEnum {
-    PAYMENT_AWAITING(0) {
+    CREATED(0) {
         @Override
         public List<StatusEnum> getNext() {
             return List.of(CONFIRM_AWAITING, REFUND_AWAITING);
@@ -20,7 +20,7 @@ public enum DepositStatusEnum implements StatusEnum {
     CONFIRM_AWAITING(1) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(PAYMENT_AWAITING, CONFIRMED, REFUND_AWAITING);
+            return List.of(CREATED, CONFIRMED, REFUND_AWAITING);
         }
     },
     CONFIRMED(2) {

@@ -17,6 +17,6 @@ public class DepositConfirmAwaitingRollbackConsumer {
     @RetryableTopic(kafkaTemplate = "stringValueKafkaTemplate", attempts = "5")
     @KafkaListener(topics = KafkaTopics.DEPOSIT_CONFIRM_AWAITING_ROLLBACK, groupId = "${kafka.consumer-group-id}", containerFactory = "stringValueListenerContainerFactory")
     public void scheduleJob(String merchantUid) {
-        depositService.rollbackToPaymentAwaiting(merchantUid);
+        depositService.rollbackToCreated(merchantUid);
     }
 }

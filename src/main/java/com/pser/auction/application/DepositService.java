@@ -15,7 +15,7 @@ import com.pser.auction.dto.PaymentDto.Response;
 import com.pser.auction.dto.RefundDto;
 import com.pser.auction.exception.ValidationFailedException;
 import com.pser.auction.infra.kafka.producer.DepositConfirmAwaitingProducer;
-import com.pser.auction.infra.kafka.producer.DepositPaymentAwaitingProducer;
+import com.pser.auction.infra.kafka.producer.DepositCreatedProducer;
 import com.pser.auction.infra.kafka.producer.DepositRefundAwaitingProducer;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class DepositService {
     private final DepositDao depositDao;
     private final DepositConfirmAwaitingProducer depositConfirmAwaitingProducer;
     private final DepositRefundAwaitingProducer depositRefundAwaitingProducer;
-    private final DepositPaymentAwaitingProducer depositPaymentAwaitingProducer;
+    private final DepositCreatedProducer depositCreatedProducer;
 
     public DepositResponse getByMerchantUid(String merchantUid) {
         Deposit deposit = depositDao.findByMerchantUid(merchantUid)
@@ -59,7 +59,7 @@ public class DepositService {
         request.setAuction(auction);
         deposit = depositMapper.toEntity(request);
         deposit = depositDao.save(deposit);
-        depositPaymentAwaitingProducer.notifyPaymentAwaiting(deposit.getMerchantUid());
+        depositCreatedProducer.notifyCreated(deposit.getMerchantUid());
         return depositMapper.toResponse(deposit);
     }
 
@@ -69,7 +69,7 @@ public class DepositService {
                 .orElseThrow();
         DepositStatusEnum status = deposit.getStatus();
 
-        if (status.equals(DepositStatusEnum.PAYMENT_AWAITING)) {
+        if (status.equals(DepositStatusEnum.CREATED)) {
             ConfirmDto confirmDto = ConfirmDto.builder()
                     .impUid(impUid)
                     .paidAmount(deposit.getPrice())
@@ -81,10 +81,10 @@ public class DepositService {
     }
 
     @Transactional
-    public void rollbackToPaymentAwaiting(String merchantUid) {
+    public void rollbackToCreated(String merchantUid) {
         Deposit deposit = depositDao.findByMerchantUid(merchantUid)
                 .orElseThrow();
-        deposit.updateStatus(DepositStatusEnum.PAYMENT_AWAITING);
+        deposit.updateStatus(DepositStatusEnum.CREATED);
     }
 
     @Transactional
@@ -182,7 +182,7 @@ public class DepositService {
     private Deposit findPendingDepositByUserIdAndAuctionId(Long userId, Long auctionId) {
         List<DepositStatusEnum> pendingStatuses = List.of(
                 DepositStatusEnum.CONFIRM_AWAITING,
-                DepositStatusEnum.PAYMENT_AWAITING
+                DepositStatusEnum.CREATED
         );
         return depositDao.findByUserIdAndAuctionIdAndStatusIn(userId, auctionId, pendingStatuses)
                 .orElse(null);

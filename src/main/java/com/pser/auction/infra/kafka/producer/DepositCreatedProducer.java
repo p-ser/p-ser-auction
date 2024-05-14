@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class DepositPaymentAwaitingProducer {
+public class DepositCreatedProducer {
     private final KafkaTemplate<String, String> stringValueKafkaTemplate;
 
-    public void notifyPaymentAwaiting(String merchantUid) {
-        stringValueKafkaTemplate.send(KafkaTopics.DEPOSIT_PAYMENT_AWAITING, merchantUid);
+    public void notifyCreated(String merchantUid) {
+        stringValueKafkaTemplate.send(KafkaTopics.DEPOSIT_CREATED, merchantUid);
     }
 }

@@ -17,7 +17,7 @@ import com.pser.auction.dto.DepositCreateRequest;
 import com.pser.auction.dto.DepositMapper;
 import com.pser.auction.dto.DepositMapperImpl;
 import com.pser.auction.infra.kafka.producer.DepositConfirmAwaitingProducer;
-import com.pser.auction.infra.kafka.producer.DepositPaymentAwaitingProducer;
+import com.pser.auction.infra.kafka.producer.DepositCreatedProducer;
 import com.pser.auction.infra.kafka.producer.DepositRefundAwaitingProducer;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class DepositServiceTest {
     DepositRefundAwaitingProducer depositRefundAwaitingProducer;
 
     @Mock
-    DepositPaymentAwaitingProducer depositPaymentAwaitingProducer;
+    DepositCreatedProducer depositCreatedProducer;
 
     DepositCreateRequest request = DepositCreateRequest.builder()
             .auctionId(1L)
@@ -86,10 +86,10 @@ public class DepositServiceTest {
 
     @Test
     @DisplayName("결제 대기 상태 보증금 체크")
-    public void checkStatusGivenPaymentAwaiting() {
+    public void checkStatusGivenCreated() {
         Deposit spiedDeposit = spy(deposit);
         DepositService spiedDepositService = spy(depositService);
-        given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.PAYMENT_AWAITING);
+        given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.CREATED);
         willDoNothing().given(spiedDepositService).updateToConfirmAwaiting(any());
         given(depositDao.findById(any())).willReturn(Optional.of(spiedDeposit));
 
@@ -100,7 +100,7 @@ public class DepositServiceTest {
 
     @Test
     @DisplayName("결제 대기 상태가 아닌 보증금 체크")
-    public void checkStatusGivenNotPaymentAwaiting() {
+    public void checkStatusGivenNotCreated() {
         Deposit spiedDeposit = spy(deposit);
         DepositService spiedDepositService = spy(depositService);
         given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.CONFIRM_AWAITING);

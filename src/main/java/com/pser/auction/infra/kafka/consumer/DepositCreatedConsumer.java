@@ -19,11 +19,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DepositPaymentAwaitingConsumer {
+public class DepositCreatedConsumer {
     private final Scheduler scheduler;
 
     @RetryableTopic(kafkaTemplate = "stringValueKafkaTemplate", attempts = "5")
-    @KafkaListener(topics = KafkaTopics.DEPOSIT_PAYMENT_AWAITING, groupId = "${kafka.consumer-group-id}", containerFactory = "stringValueListenerContainerFactory")
+    @KafkaListener(topics = KafkaTopics.DEPOSIT_CREATED, groupId = "${kafka.consumer-group-id}", containerFactory = "stringValueListenerContainerFactory")
     public void scheduleJob(String merchantUid) throws SchedulerException {
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put("merchantUid", merchantUid);

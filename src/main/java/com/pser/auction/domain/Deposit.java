@@ -38,7 +38,7 @@ public class Deposit extends StatusHolderEntity<DepositStatusEnum> {
 
     @Column(nullable = false)
     @Convert(converter = DepositStatusEnumConverter.class)
-    private DepositStatusEnum status = DepositStatusEnum.PAYMENT_AWAITING;
+    private DepositStatusEnum status = DepositStatusEnum.CREATED;
 
     @Builder
     public Deposit(long userId, Auction auction, int price) {
