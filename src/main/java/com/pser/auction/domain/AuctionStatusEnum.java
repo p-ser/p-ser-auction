@@ -9,11 +9,12 @@ import lombok.Getter;
 
 @Getter
 public enum AuctionStatusEnum {
-    ON_GOING(0),
-    PAYMENT_AWAITING(1),
-    PAID(2),
-    PAYMENT_DENIAL(3),
-    FAILURE(4);
+    CREATED(0),
+    ON_GOING(1),
+    PAYMENT_AWAITING(2),
+    PAID(3),
+    PAYMENT_DENIAL(4),
+    FAILURE(5);
 
     private static final Map<Integer, AuctionStatusEnum> valueToName =
             Collections.unmodifiableMap(Stream.of(values())
