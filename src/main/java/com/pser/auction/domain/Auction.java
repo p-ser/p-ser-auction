@@ -3,8 +3,6 @@ package com.pser.auction.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,13 +14,10 @@ import lombok.ToString;
 @Setter
 @Entity
 @NoArgsConstructor
-@ToString(of = {"price", "endPrice", "startAt", "endAt", "depositPrice", "status"})
+@ToString(of = {"price", "endPrice", "endAt", "depositPrice", "status"})
 public class Auction extends BaseEntity {
     @Column(unique = true, nullable = false)
-    private long auctionedReservationId;
-
-    @Column(unique = true, nullable = false)
-    private long derivedReservationId;
+    private long reservationId;
 
     @Column(nullable = false)
     private int price;
@@ -31,28 +26,21 @@ public class Auction extends BaseEntity {
     private int endPrice;
 
     @Column(nullable = false)
-    private LocalDateTime startAt;
-
-    @Column(nullable = false)
     private LocalDateTime endAt;
 
     @Column(nullable = false)
     private int depositPrice;
 
     @Column(nullable = false)
-    private AuctionStatusEnum status;
+    private AuctionStatusEnum status = AuctionStatusEnum.CREATED;
 
     @Builder
-    public Auction(long auctionedReservationId, long derivedReservationId, int price, int endPrice,
-                   LocalDateTime startAt, LocalDateTime endAt, int depositPrice, AuctionStatusEnum status) {
-        this.auctionedReservationId = auctionedReservationId;
-        this.derivedReservationId = derivedReservationId;
+    public Auction(long reservationId, int price, int endPrice, LocalDateTime endAt, int depositPrice) {
+        this.reservationId = reservationId;
         this.price = price;
         this.endPrice = endPrice;
-        this.startAt = startAt;
         this.endAt = endAt;
         this.depositPrice = depositPrice;
-        this.status = status;
     }
 
     @PrePersist
