@@ -13,9 +13,7 @@ import lombok.Data;
 public class AuctionResponse {
     private Long id;
 
-    private Long auctionedReservationId;
-
-    private Long derivedReservationId;
+    private ReservationResponse reservationResponse;
 
     private Integer price;
 
