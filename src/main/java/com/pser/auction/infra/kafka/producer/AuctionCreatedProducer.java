@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class AuctionCreatedProducer {
     private final KafkaTemplate<String, AuctionDto> auctionDtoValueKafkaTemplate;
 
-    public void notifyCreated(AuctionDto auctionDto) {
+    public void produce(AuctionDto auctionDto) {
         auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_CREATED, auctionDto);
     }
 }

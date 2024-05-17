@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class DepositConfirmAwaitingProducer {
     private final KafkaTemplate<String, ConfirmDto> confirmDtoValueKafkaTemplate;
 
-    public void notifyConfirmAwaiting(ConfirmDto confirmDto) {
+    public void produce(ConfirmDto confirmDto) {
         confirmDtoValueKafkaTemplate.send(KafkaTopics.DEPOSIT_CONFIRM_AWAITING, confirmDto);
     }
 }

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class DepositCreatedProducer {
     private final KafkaTemplate<String, String> stringValueKafkaTemplate;
 
-    public void notifyCreated(String merchantUid) {
+    public void produce(String merchantUid) {
         stringValueKafkaTemplate.send(KafkaTopics.DEPOSIT_CREATED, merchantUid);
     }
 }

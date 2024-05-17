@@ -21,7 +21,7 @@ public class AuctionService {
     public long save(AuctionCreateRequest request) {
         Auction auction = auctionMapper.toEntity(request);
         return Try.of(() -> auctionDao.save(auction))
-                .onSuccess((savedAuction) -> auctionCreatedProducer.notifyCreated(auctionMapper.toDto(savedAuction)))
+                .onSuccess((savedAuction) -> auctionCreatedProducer.produce(auctionMapper.toDto(savedAuction)))
                 .recover((e) -> auctionDao.findAuctionByReservationId(request.getReservationId())
                         .orElseThrow())
                 .get()

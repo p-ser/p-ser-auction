@@ -59,7 +59,7 @@ public class DepositService {
         request.setAuction(auction);
         deposit = depositMapper.toEntity(request);
         deposit = depositDao.save(deposit);
-        depositCreatedProducer.notifyCreated(deposit.getMerchantUid());
+        depositCreatedProducer.produce(deposit.getMerchantUid());
         return depositMapper.toResponse(deposit);
     }
 
@@ -100,7 +100,7 @@ public class DepositService {
 
         if (!targetStatus.equals(deposit.getStatus())) {
             deposit.updateStatus(targetStatus);
-            depositConfirmAwaitingProducer.notifyConfirmAwaiting(confirmDto);
+            depositConfirmAwaitingProducer.produce(confirmDto);
         }
     }
 
@@ -112,7 +112,7 @@ public class DepositService {
 
         if (!targetStatus.equals(deposit.getStatus())) {
             deposit.updateStatus(targetStatus);
-            depositRefundAwaitingProducer.notifyRefundAwaiting(refundDto);
+            depositRefundAwaitingProducer.produce(refundDto);
         }
     }
 
@@ -173,7 +173,7 @@ public class DepositService {
     private Auction findOnGoingAuctionById(Long auctionId) {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 경매입니다"));
-        if (!AuctionStatusEnum.ON_GOING.equals(auction.getStatus())) {
+        if (!AuctionStatusEnum.ONGOING.equals(auction.getStatus())) {
             throw new IllegalArgumentException("진행중인 경매가 아닙니다");
         }
         return auction;

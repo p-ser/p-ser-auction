@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class DepositRefundAwaitingProducer {
     private final KafkaTemplate<String, RefundDto> refundDtoValueKafkaTemplate;
 
-    public void notifyRefundAwaiting(RefundDto refundDto) {
+    public void produce(RefundDto refundDto) {
         refundDtoValueKafkaTemplate.send(KafkaTopics.DEPOSIT_REFUND_AWAITING, refundDto);
     }
 }
