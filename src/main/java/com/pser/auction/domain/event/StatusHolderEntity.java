@@ -1,6 +1,7 @@
 package com.pser.auction.domain.event;
 
 import com.pser.auction.domain.BaseEntity;
+import com.pser.auction.exception.StatusUpdateException;
 import jakarta.persistence.MappedSuperclass;
 import java.util.List;
 import lombok.Getter;
@@ -16,7 +17,7 @@ public class StatusHolderEntity<T extends StatusEnum> extends BaseEntity impleme
     public void updateStatus(T status) {
         List<StatusEnum> candidates = getStatus().getNext();
         if (candidates == null || !candidates.contains(status)) {
-            throw new IllegalArgumentException();
+            throw new StatusUpdateException();
         }
         setStatus(status);
     }
