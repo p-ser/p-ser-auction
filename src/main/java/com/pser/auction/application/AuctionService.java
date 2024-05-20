@@ -12,7 +12,10 @@ import com.pser.auction.domain.AuctionStatusEnum;
 import com.pser.auction.dto.AuctionCreateRequest;
 import com.pser.auction.dto.AuctionDto;
 import com.pser.auction.dto.AuctionMapper;
+import com.pser.auction.dto.PaymentDto;
+import com.pser.auction.dto.RefundDto;
 import com.pser.auction.exception.NotOngoingAuctionException;
+import com.pser.auction.exception.ValidationFailedException;
 import com.pser.auction.infra.kafka.producer.AuctionStatusProducer;
 import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
@@ -39,11 +42,93 @@ public class AuctionService {
     }
 
     @Transactional
+    public AuctionStatusEnum checkPayment(long auctionId, String impUid) {
+        Auction auction = auctionDao.findById(auctionId)
+                .orElseThrow();
+        AuctionStatusEnum status = auction.getStatus();
+
+        if (status.equals(AuctionStatusEnum.PAYMENT_REQUIRED)) {
+            PaymentDto paymentDto = PaymentDto.builder()
+                    .impUid(impUid)
+                    .amount(auction.getEndPrice())
+                    .merchantUid(auction.getMerchantUid())
+                    .build();
+            updateToPaymentValidationRequired(paymentDto);
+        }
+        return status;
+    }
+
+    @Transactional
     public void updateToOngoing(long auctionId) {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow();
         AuctionStatusEnum targetStatus = AuctionStatusEnum.ONGOING;
         auction.updateStatus(targetStatus);
+    }
+
+    @Transactional
+    public void updateToPaid(PaymentDto paymentDto) {
+        Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
+                .orElseThrow();
+        AuctionStatusEnum status = auction.getStatus();
+        AuctionStatusEnum targetStatus = AuctionStatusEnum.PAID;
+        int paidAmount = paymentDto.getAmount();
+
+        if (auction.getEndPrice() != paidAmount) {
+            throw new ValidationFailedException("결제 금액 불일치");
+        }
+
+        if (status.equals(AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED)) {
+            auction.updateStatus(targetStatus);
+        }
+    }
+
+    @Transactional
+    public void updateToPaymentRequired(PaymentDto paymentDto) {
+        Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
+                .orElseThrow();
+        AuctionStatusEnum status = auction.getStatus();
+        AuctionStatusEnum targetStatus = AuctionStatusEnum.PAYMENT_REQUIRED;
+
+        if (!status.equals(targetStatus)) {
+            auction.updateStatus(targetStatus);
+        }
+    }
+
+    @Transactional
+    public void updateToPaymentValidationRequired(PaymentDto paymentDto) {
+        Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
+                .orElseThrow();
+        AuctionStatusEnum status = auction.getStatus();
+        AuctionStatusEnum targetStatus = AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED;
+
+        int paidAmount = paymentDto.getAmount();
+
+        if (auction.getEndPrice() != paidAmount) {
+            throw new ValidationFailedException("결제 금액 불일치");
+        }
+
+        if (status.equals(AuctionStatusEnum.PAYMENT_REQUIRED)) {
+            auction.updateImpUid(paymentDto.getImpUid());
+            auction.updateStatus(targetStatus);
+            auctionStatusProducer.producePaymentValidationRequired(paymentDto);
+        }
+    }
+
+    @Transactional
+    public void updateToRefundRequired(PaymentDto paymentDto) {
+        Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
+                .orElseThrow();
+        AuctionStatusEnum targetStatus = AuctionStatusEnum.REFUND_REQUIRED;
+
+        if (!targetStatus.equals(auction.getStatus())) {
+            auction.updateStatus(targetStatus);
+            RefundDto refundDto = RefundDto.builder()
+                    .impUid(paymentDto.getImpUid())
+                    .merchantUid(paymentDto.getMerchantUid())
+                    .build();
+            auctionStatusProducer.produceRefundRequired(refundDto);
+        }
     }
 
     @Transactional
@@ -58,9 +143,9 @@ public class AuctionService {
             auctionStatusProducer.produceFailure(auctionDto);
         };
         Runnable whenAnyBid = () -> {
-            auction.updateStatus(AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED);
+            auction.updateStatus(AuctionStatusEnum.PAYMENT_REQUIRED);
             auction.updateWinner();
-            auctionStatusProducer.producePaymentValidationRequired(auctionDto);
+            auctionStatusProducer.producePaymentRequired(auctionDto);
         };
         Runnable whenCreatedStatus = () -> {
             auctionDao.delete(auction);

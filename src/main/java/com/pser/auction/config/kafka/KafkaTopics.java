@@ -5,6 +5,8 @@ public interface KafkaTopics {
     String AUCTION_CREATED_ROLLBACK = "auction.created-rollback";
     String AUCTION_VALIDATION_CHECKED = "auction.validation-checked";
     String AUCTION_PAYMENT_VALIDATION_REQUIRED = "auction.payment-validation-required";
+    String AUCTION_REFUND_REQUIRED = "auction.refund-required";
+    String AUCTION_REFUND_CHECKED = "auction.refund-checked";
     String AUCTION_FAILURE = "auction.failure";
     String DEPOSIT_CREATED = "deposit.created";
     String DEPOSIT_PAYMENT_VALIDATION_REQUIRED = "deposit.payment-validation-required";
