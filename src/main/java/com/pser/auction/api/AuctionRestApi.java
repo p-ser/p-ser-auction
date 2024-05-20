@@ -2,6 +2,7 @@ package com.pser.auction.api;
 
 import com.pser.auction.application.AuctionService;
 import com.pser.auction.common.response.ApiResponse;
+import com.pser.auction.domain.AuctionStatusEnum;
 import com.pser.auction.dto.AuctionCreateRequest;
 import com.pser.auction.dto.AuctionResponse;
 import com.pser.auction.dto.AuctionSearchRequest;
@@ -39,6 +40,13 @@ public class AuctionRestApi {
     public ResponseEntity<ApiResponse<AuctionResponse>> getById(@PathVariable long auctionId) {
         //TODO: 서비스, Elasticsearch 에서 가져온 Materialized View 를 반환
         AuctionResponse result = null;
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/{auctionId}/check-payment")
+    public ResponseEntity<ApiResponse<AuctionStatusEnum>> checkPayment(@PathVariable long auctionId,
+                                                                       @RequestBody String impUid) {
+        AuctionStatusEnum result = auctionService.checkPayment(auctionId, impUid);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
