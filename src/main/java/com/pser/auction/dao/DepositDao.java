@@ -12,8 +12,11 @@ import org.springframework.lang.NonNull;
 public interface DepositDao extends JpaRepository<Deposit, Long> {
     Optional<Deposit> findByMerchantUid(String merchantUid);
 
-    Optional<Deposit> findByUserIdAndAuctionIdAndStatusIn(Long userId, Long auctionId, List<DepositStatusEnum> statusEnums);
+    Optional<Deposit> findByUserIdAndAuctionIdAndStatusIn(Long userId, Long auctionId,
+                                                          List<DepositStatusEnum> statusEnums);
 
     @NonNull
     Page<Deposit> findAllByAuctionId(Long auctionId, @NonNull Pageable pageable);
+
+    List<Deposit> findAllByAuctionIdAndStatusIn(Long auctionId, List<DepositStatusEnum> status);
 }

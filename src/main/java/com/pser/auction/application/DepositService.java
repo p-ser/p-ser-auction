@@ -14,9 +14,7 @@ import com.pser.auction.dto.PaymentDto;
 import com.pser.auction.dto.PaymentDto.Response;
 import com.pser.auction.dto.RefundDto;
 import com.pser.auction.exception.ValidationFailedException;
-import com.pser.auction.infra.kafka.producer.DepositConfirmAwaitingProducer;
-import com.pser.auction.infra.kafka.producer.DepositCreatedProducer;
-import com.pser.auction.infra.kafka.producer.DepositRefundAwaitingProducer;
+import com.pser.auction.infra.kafka.producer.DepositStatusProducer;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,9 +30,7 @@ public class DepositService {
     private final DepositMapper depositMapper;
     private final AuctionDao auctionDao;
     private final DepositDao depositDao;
-    private final DepositConfirmAwaitingProducer depositConfirmAwaitingProducer;
-    private final DepositRefundAwaitingProducer depositRefundAwaitingProducer;
-    private final DepositCreatedProducer depositCreatedProducer;
+    private final DepositStatusProducer depositStatusProducer;
 
     public DepositResponse getByMerchantUid(String merchantUid) {
         Deposit deposit = depositDao.findByMerchantUid(merchantUid)
@@ -59,7 +55,7 @@ public class DepositService {
         request.setAuction(auction);
         deposit = depositMapper.toEntity(request);
         deposit = depositDao.save(deposit);
-        depositCreatedProducer.produce(deposit.getMerchantUid());
+        depositStatusProducer.produceCreated(deposit.getMerchantUid());
         return depositMapper.toResponse(deposit);
     }
 
@@ -100,7 +96,7 @@ public class DepositService {
 
         if (!targetStatus.equals(deposit.getStatus())) {
             deposit.updateStatus(targetStatus);
-            depositConfirmAwaitingProducer.produce(confirmDto);
+            depositStatusProducer.produceConfirmAwaiting(confirmDto);
         }
     }
 
@@ -112,7 +108,7 @@ public class DepositService {
 
         if (!targetStatus.equals(deposit.getStatus())) {
             deposit.updateStatus(targetStatus);
-            depositRefundAwaitingProducer.produce(refundDto);
+            depositStatusProducer.produceRefundAwaiting(refundDto);
         }
     }
 
@@ -154,6 +150,22 @@ public class DepositService {
         if (!targetStatus.equals(deposit.getStatus())) {
             deposit.updateStatus(targetStatus);
         }
+    }
+
+    @Transactional
+    public void refundAllExceptWinner(long auctionId, Long winnerId) {
+        List<DepositStatusEnum> statusEnums = List.of(
+                DepositStatusEnum.CREATED,
+                DepositStatusEnum.CONFIRM_AWAITING,
+                DepositStatusEnum.CONFIRMED
+        );
+        depositDao.findAllByAuctionIdAndStatusIn(auctionId, statusEnums)
+                .forEach(deposit -> {
+                    if (winnerId == null || winnerId.equals(deposit.getUserId())) {
+                        return;
+                    }
+                    updateToRefundAwaiting(deposit.getMerchantUid());
+                });
     }
 
     private RefundDto toRefundDto(PaymentDto paymentDto) {
