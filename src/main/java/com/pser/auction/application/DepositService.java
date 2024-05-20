@@ -58,7 +58,7 @@ public class DepositService {
     }
 
     @Transactional
-    public DepositStatusEnum checkStatus(long depositId, String impUid) {
+    public DepositStatusEnum checkPayment(long depositId, String impUid) {
         Deposit deposit = depositDao.findById(depositId)
                 .orElseThrow();
         DepositStatusEnum status = deposit.getStatus();

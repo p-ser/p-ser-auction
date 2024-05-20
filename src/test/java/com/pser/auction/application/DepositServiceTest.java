@@ -1,5 +1,11 @@
 package com.pser.auction.application;
 
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+import static io.vavr.API.Match;
+import static io.vavr.API.run;
+import static io.vavr.Predicates.is;
+import static io.vavr.Predicates.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -85,7 +91,7 @@ public class DepositServiceTest {
         willDoNothing().given(spiedDepositService).updateToPaymentValidationRequired(any());
         given(depositDao.findById(any())).willReturn(Optional.of(spiedDeposit));
 
-        spiedDepositService.checkStatus(1L, "");
+        spiedDepositService.checkPayment(1L, "");
 
         then(spiedDepositService).should().updateToPaymentValidationRequired(any());
     }
@@ -98,8 +104,29 @@ public class DepositServiceTest {
         given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED);
         given(depositDao.findById(any())).willReturn(Optional.of(spiedDeposit));
 
-        spiedDepositService.checkStatus(1L, "");
+        spiedDepositService.checkPayment(1L, "");
 
         then(spiedDepositService).should(never()).updateToPaymentValidationRequired(any());
+    }
+
+    @Test
+    public void test() {
+//        DepositCreateRequest depositCreateRequest = null;
+//        Long value = Optional.ofNullable(depositCreateRequest)
+//                .map(DepositCreateRequest::getUserId)
+//                .orElse(1L);
+        int input = 2;
+        String output = Match(input).of(
+                Case($(1), "one"),
+                Case($(2), "two"),
+                Case($(3), "three"),
+                Case($(), "?"));
+        Match(1).of(
+                Case($(not(is(2))), () -> run(() -> log.error("1 isn't 2"))),
+                Case($(1), () -> run(() -> log.error("1 is 1"))),
+                Case($(3), () -> run(() -> log.error("1 is 3"))),
+                Case($(), () -> run(() -> log.error("none")))
+        );
+        log.error("value=" + output);
     }
 }

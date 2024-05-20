@@ -38,11 +38,11 @@ public class DepositApi {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PostMapping("/{depositId}/check")
-    public ResponseEntity<ApiResponse<DepositStatusEnum>> checkStatus(@PathVariable long auctionId,
-                                                                      @PathVariable long depositId,
-                                                                      @RequestBody String impUid) {
-        DepositStatusEnum response = depositService.checkStatus(depositId, impUid);
+    @PostMapping("/{depositId}/check-payment")
+    public ResponseEntity<ApiResponse<DepositStatusEnum>> checkPayment(@PathVariable long auctionId,
+                                                                       @PathVariable long depositId,
+                                                                       @RequestBody String impUid) {
+        DepositStatusEnum response = depositService.checkPayment(depositId, impUid);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
