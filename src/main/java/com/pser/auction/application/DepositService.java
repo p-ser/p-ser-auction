@@ -124,6 +124,7 @@ public class DepositService {
     public void updateToPaid(PaymentDto paymentDto) {
         Deposit deposit = depositDao.findByMerchantUid(paymentDto.getMerchantUid())
                 .orElseThrow();
+        DepositStatusEnum status = deposit.getStatus();
         DepositStatusEnum targetStatus = DepositStatusEnum.PAID;
         int paidAmount = paymentDto.getAmount();
 
@@ -131,7 +132,7 @@ public class DepositService {
             throw new ValidationFailedException("결제 금액 불일치");
         }
 
-        if (!targetStatus.equals(deposit.getStatus())) {
+        if (status.equals(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED)) {
             deposit.setImpUid(paymentDto.getImpUid());
             deposit.updateStatus(targetStatus);
         }
@@ -141,9 +142,10 @@ public class DepositService {
     public void updateToRefunded(PaymentDto paymentDto) {
         Deposit deposit = depositDao.findByMerchantUid(paymentDto.getMerchantUid())
                 .orElseThrow();
+        DepositStatusEnum status = deposit.getStatus();
         DepositStatusEnum targetStatus = DepositStatusEnum.REFUNDED;
 
-        if (!targetStatus.equals(deposit.getStatus())) {
+        if (!targetStatus.equals(status)) {
             deposit.updateStatus(targetStatus);
         }
     }
