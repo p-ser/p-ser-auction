@@ -1,5 +1,6 @@
 package com.pser.auction.domain;
 
+import com.pser.auction.exception.StatusUpdateException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,6 @@ public class DepositStatusEnumTest {
 
         Throwable throwable = Assertions.catchThrowable(() -> deposit.updateStatus(DepositStatusEnum.PAID));
 
-        Assertions.assertThat(throwable).isInstanceOf(IllegalArgumentException.class);
+        Assertions.assertThat(throwable).isInstanceOf(StatusUpdateException.class);
     }
 }
