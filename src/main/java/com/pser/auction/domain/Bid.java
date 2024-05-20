@@ -7,7 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ import lombok.Setter;
 @Table(
         uniqueConstraints = {
                 @UniqueConstraint(
-                        columnNames = {"user_id", "auction_id"}
+                        columnNames = {"price", "auction_id"}
                 )
         }
 )
@@ -31,9 +31,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Bid extends BaseEntity {
     @Column(nullable = false)
-    private long user_id;
+    private long userId;
 
-    @OneToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Auction auction;
 
