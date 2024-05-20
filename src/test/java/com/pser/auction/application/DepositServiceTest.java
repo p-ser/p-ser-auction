@@ -72,7 +72,7 @@ public class DepositServiceTest {
     @DisplayName("보증금 생성 또는 결제 진행중인 보증금 가져오기")
     public void getOrSave() {
         Deposit spiedDeposit = spy(deposit);
-        auction.setStatus(AuctionStatusEnum.ON_GOING);
+        auction.setStatus(AuctionStatusEnum.ONGOING);
         given(spiedDeposit.getId()).willReturn(123L);
         given(auctionDao.findById(any())).willReturn(Optional.of(auction));
         given(depositDao.save(any())).willReturn(spiedDeposit);
