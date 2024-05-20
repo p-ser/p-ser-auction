@@ -116,6 +116,18 @@ public class AuctionService {
     }
 
     @Transactional
+    public void rollbackToPaymentRequired(String merchantUid) {
+        Auction auction = auctionDao.findByMerchantUid(merchantUid)
+                .orElseThrow();
+        AuctionStatusEnum status = auction.getStatus();
+        AuctionStatusEnum targetStatus = AuctionStatusEnum.PAYMENT_REQUIRED;
+
+        if (!status.equals(targetStatus)) {
+            auction.updateStatus(targetStatus);
+        }
+    }
+
+    @Transactional
     public void updateToRefundRequired(PaymentDto paymentDto) {
         Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
                 .orElseThrow();
