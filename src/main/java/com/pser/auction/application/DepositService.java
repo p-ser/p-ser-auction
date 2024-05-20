@@ -93,6 +93,7 @@ public class DepositService {
         }
 
         if (!targetStatus.equals(deposit.getStatus())) {
+            deposit.updateImpUid(paymentDto.getImpUid());
             deposit.updateStatus(targetStatus);
             depositStatusProducer.producePaymentValidationRequired(paymentDto);
         }
@@ -133,7 +134,6 @@ public class DepositService {
         }
 
         if (status.equals(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED)) {
-            deposit.setImpUid(paymentDto.getImpUid());
             deposit.updateStatus(targetStatus);
         }
     }

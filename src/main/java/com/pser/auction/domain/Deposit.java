@@ -46,4 +46,8 @@ public class Deposit extends StatusHolderEntity<DepositStatusEnum> {
         this.auction = auction;
         this.price = price;
     }
+
+    public void updateImpUid(String impUid) {
+        this.impUid = impUid;
+    }
 }
