@@ -78,4 +78,10 @@ public class AuctionService {
 
         return auction.getWinnerId();
     }
+
+    public void delete(long auctionId) {
+        Auction auction = auctionDao.findById(auctionId)
+                .orElseThrow();
+        auctionDao.delete(auction);
+    }
 }
