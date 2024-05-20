@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AuctionDao extends JpaRepository<Auction, Long> {
     Optional<Auction> findAuctionByReservationId(Long reservationId);
+
+    Optional<Auction> findByMerchantUid(String merchantUid);
 }

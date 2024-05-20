@@ -10,6 +10,7 @@ import jakarta.persistence.PrePersist;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,12 @@ import lombok.ToString;
 public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
     @Column(unique = true, nullable = false)
     private long reservationId;
+
+    @Column(unique = true, nullable = false)
+    private String merchantUid = UUID.randomUUID().toString();
+
+    @Column(unique = true)
+    private String impUid;
 
     private Long winnerId;
 
@@ -59,8 +66,12 @@ public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
         this.depositPrice = depositPrice;
     }
 
+    public void updateImpUid(String impUid) {
+        this.impUid = impUid;
+    }
+
     public void updateWinner() {
-        if (!status.equals(AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED)) {
+        if (!status.equals(AuctionStatusEnum.PAYMENT_REQUIRED)) {
             throw new IllegalArgumentException();
         }
 
