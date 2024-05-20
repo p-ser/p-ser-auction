@@ -39,6 +39,14 @@ public class AuctionService {
     }
 
     @Transactional
+    public void updateToOngoing(long auctionId) {
+        Auction auction = auctionDao.findById(auctionId)
+                .orElseThrow();
+        AuctionStatusEnum targetStatus = AuctionStatusEnum.ONGOING;
+        auction.updateStatus(targetStatus);
+    }
+
+    @Transactional
     public Long closeAuction(long auctionId) {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow();
