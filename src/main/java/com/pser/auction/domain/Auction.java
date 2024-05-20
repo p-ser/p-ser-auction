@@ -60,7 +60,7 @@ public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
     }
 
     public void updateWinner() {
-        if (!status.equals(AuctionStatusEnum.PAYMENT_AWAITING)) {
+        if (!status.equals(AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED)) {
             throw new IllegalArgumentException();
         }
 

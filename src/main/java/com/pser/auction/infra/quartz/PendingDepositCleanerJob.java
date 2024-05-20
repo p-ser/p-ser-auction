@@ -23,8 +23,8 @@ public class PendingDepositCleanerJob extends QuartzJobBean {
 
         DepositResponse depositResponse = depositService.getByMerchantUid(merchantUid);
         DepositStatusEnum status = depositResponse.getStatus();
-        if (status.equals(DepositStatusEnum.CREATED) || status.equals(DepositStatusEnum.CONFIRM_AWAITING)) {
-            depositService.updateToRefundAwaiting(merchantUid);
+        if (status.equals(DepositStatusEnum.CREATED) || status.equals(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED)) {
+            depositService.updateToRefundRequired(merchantUid);
         }
     }
 }

@@ -15,9 +15,9 @@ public class DepositStatusEnumTest {
     public void updateStatus() {
         Deposit deposit = Deposit.builder().build();
 
-        deposit.updateStatus(DepositStatusEnum.CONFIRM_AWAITING);
+        deposit.updateStatus(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED);
 
-        Assertions.assertThat(deposit.getStatus()).isEqualTo(DepositStatusEnum.CONFIRM_AWAITING);
+        Assertions.assertThat(deposit.getStatus()).isEqualTo(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED);
     }
 
     @Test
@@ -25,7 +25,7 @@ public class DepositStatusEnumTest {
     public void updateToWrongStatus() {
         Deposit deposit = Deposit.builder().build();
 
-        Throwable throwable = Assertions.catchThrowable(() -> deposit.updateStatus(DepositStatusEnum.CONFIRMED));
+        Throwable throwable = Assertions.catchThrowable(() -> deposit.updateStatus(DepositStatusEnum.PAID));
 
         Assertions.assertThat(throwable).isInstanceOf(IllegalArgumentException.class);
     }

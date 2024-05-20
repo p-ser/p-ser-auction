@@ -16,15 +16,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DepositConfirmedConsumer {
+public class DepositPaymentValidationCheckedConsumer {
     private final DepositService depositService;
 
     @RetryableTopic(kafkaTemplate = "paymentDtoValueKafkaTemplate", attempts = "5")
-    @KafkaListener(topics = KafkaTopics.DEPOSIT_CONFIRMED, groupId = "${kafka.consumer-group-id}", containerFactory = "paymentDtoValueListenerContainerFactory")
-    public void updateToConfirmed(PaymentDto paymentDto) {
-        Try.run(() -> depositService.updateToConfirmed(paymentDto))
+    @KafkaListener(topics = KafkaTopics.DEPOSIT_PAYMENT_VALIDATION_CHECKED, groupId = "${kafka.consumer-group-id}", containerFactory = "paymentDtoValueListenerContainerFactory")
+    public void updateToPaymentValidationChecked(PaymentDto paymentDto) {
+        Try.run(() -> depositService.updateToPaid(paymentDto))
                 .recover(ValidationFailedException.class, (e) -> {
-                    depositService.updateToRefundAwaiting(paymentDto);
+                    depositService.updateToRefundRequired(paymentDto);
                     return null;
                 })
                 .get();
@@ -33,6 +33,6 @@ public class DepositConfirmedConsumer {
     @DltHandler
     public void dltHandler(ConsumerRecord<String, PaymentDto> record) {
         PaymentDto paymentDto = record.value();
-        depositService.updateToRefundAwaiting(paymentDto);
+        depositService.updateToRefundRequired(paymentDto);
     }
 }

@@ -16,9 +16,7 @@ import com.pser.auction.domain.DepositStatusEnum;
 import com.pser.auction.dto.DepositCreateRequest;
 import com.pser.auction.dto.DepositMapper;
 import com.pser.auction.dto.DepositMapperImpl;
-import com.pser.auction.infra.kafka.producer.DepositConfirmAwaitingProducer;
-import com.pser.auction.infra.kafka.producer.DepositCreatedProducer;
-import com.pser.auction.infra.kafka.producer.DepositRefundAwaitingProducer;
+import com.pser.auction.infra.kafka.producer.DepositStatusProducer;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -46,13 +44,7 @@ public class DepositServiceTest {
     DepositDao depositDao;
 
     @Mock
-    DepositConfirmAwaitingProducer depositConfirmAwaitingProducer;
-
-    @Mock
-    DepositRefundAwaitingProducer depositRefundAwaitingProducer;
-
-    @Mock
-    DepositCreatedProducer depositCreatedProducer;
+    DepositStatusProducer depositStatusProducer;
 
     DepositCreateRequest request = DepositCreateRequest.builder()
             .auctionId(1L)
@@ -90,12 +82,12 @@ public class DepositServiceTest {
         Deposit spiedDeposit = spy(deposit);
         DepositService spiedDepositService = spy(depositService);
         given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.CREATED);
-        willDoNothing().given(spiedDepositService).updateToConfirmAwaiting(any());
+        willDoNothing().given(spiedDepositService).updateToPaymentValidationRequired(any());
         given(depositDao.findById(any())).willReturn(Optional.of(spiedDeposit));
 
         spiedDepositService.checkStatus(1L, "");
 
-        then(spiedDepositService).should().updateToConfirmAwaiting(any());
+        then(spiedDepositService).should().updateToPaymentValidationRequired(any());
     }
 
     @Test
@@ -103,11 +95,11 @@ public class DepositServiceTest {
     public void checkStatusGivenNotCreated() {
         Deposit spiedDeposit = spy(deposit);
         DepositService spiedDepositService = spy(depositService);
-        given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.CONFIRM_AWAITING);
+        given(spiedDeposit.getStatus()).willReturn(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED);
         given(depositDao.findById(any())).willReturn(Optional.of(spiedDeposit));
 
         spiedDepositService.checkStatus(1L, "");
 
-        then(spiedDepositService).should(never()).updateToConfirmAwaiting(any());
+        then(spiedDepositService).should(never()).updateToPaymentValidationRequired(any());
     }
 }

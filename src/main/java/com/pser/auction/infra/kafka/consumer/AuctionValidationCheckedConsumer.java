@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AuctionValidConsumer {
+public class AuctionValidationCheckedConsumer {
     private final AuctionService auctionService;
 
     @RetryableTopic(kafkaTemplate = "auctionDtoValueKafkaTemplate", attempts = "5")
-    @KafkaListener(topics = KafkaTopics.AUCTION_VALID, groupId = "${kafka.consumer-group-id}", containerFactory = "auctionDtoValueListenerContainerFactory")
+    @KafkaListener(topics = KafkaTopics.AUCTION_VALIDATION_CHECKED, groupId = "${kafka.consumer-group-id}", containerFactory = "auctionDtoValueListenerContainerFactory")
     public void openAuction(AuctionDto auctionDto) {
         auctionService.updateToOngoing(auctionDto.getId());
     }

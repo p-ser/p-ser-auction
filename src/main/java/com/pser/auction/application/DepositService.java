@@ -6,12 +6,10 @@ import com.pser.auction.domain.Auction;
 import com.pser.auction.domain.AuctionStatusEnum;
 import com.pser.auction.domain.Deposit;
 import com.pser.auction.domain.DepositStatusEnum;
-import com.pser.auction.dto.ConfirmDto;
 import com.pser.auction.dto.DepositCreateRequest;
 import com.pser.auction.dto.DepositMapper;
 import com.pser.auction.dto.DepositResponse;
 import com.pser.auction.dto.PaymentDto;
-import com.pser.auction.dto.PaymentDto.Response;
 import com.pser.auction.dto.RefundDto;
 import com.pser.auction.exception.ValidationFailedException;
 import com.pser.auction.infra.kafka.producer.DepositStatusProducer;
@@ -66,12 +64,12 @@ public class DepositService {
         DepositStatusEnum status = deposit.getStatus();
 
         if (status.equals(DepositStatusEnum.CREATED)) {
-            ConfirmDto confirmDto = ConfirmDto.builder()
+            PaymentDto paymentDto = PaymentDto.builder()
                     .impUid(impUid)
-                    .paidAmount(deposit.getPrice())
+                    .amount(deposit.getPrice())
                     .merchantUid(deposit.getMerchantUid())
                     .build();
-            updateToConfirmAwaiting(confirmDto);
+            updateToPaymentValidationRequired(paymentDto);
         }
         return status;
     }
@@ -84,11 +82,11 @@ public class DepositService {
     }
 
     @Transactional
-    public void updateToConfirmAwaiting(ConfirmDto confirmDto) {
-        Deposit deposit = depositDao.findByMerchantUid(confirmDto.getMerchantUid())
+    public void updateToPaymentValidationRequired(PaymentDto paymentDto) {
+        Deposit deposit = depositDao.findByMerchantUid(paymentDto.getMerchantUid())
                 .orElseThrow();
-        DepositStatusEnum targetStatus = DepositStatusEnum.CONFIRM_AWAITING;
-        int paidAmount = confirmDto.getPaidAmount();
+        DepositStatusEnum targetStatus = DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED;
+        int paidAmount = paymentDto.getAmount();
 
         if (deposit.getPrice() != paidAmount) {
             throw new ValidationFailedException("결제 금액 불일치");
@@ -96,54 +94,52 @@ public class DepositService {
 
         if (!targetStatus.equals(deposit.getStatus())) {
             deposit.updateStatus(targetStatus);
-            depositStatusProducer.produceConfirmAwaiting(confirmDto);
+            depositStatusProducer.producePaymentValidationRequired(paymentDto);
         }
     }
 
     @Transactional
-    public void updateToRefundAwaiting(RefundDto refundDto) {
+    public void updateToRefundRequired(RefundDto refundDto) {
         Deposit deposit = depositDao.findByMerchantUid(refundDto.getMerchantUid())
                 .orElseThrow();
-        DepositStatusEnum targetStatus = DepositStatusEnum.REFUND_AWAITING;
+        DepositStatusEnum targetStatus = DepositStatusEnum.REFUND_REQUIRED;
 
         if (!targetStatus.equals(deposit.getStatus())) {
             deposit.updateStatus(targetStatus);
-            depositStatusProducer.produceRefundAwaiting(refundDto);
+            depositStatusProducer.produceRefundRequired(refundDto);
         }
     }
 
     @Transactional
-    public void updateToRefundAwaiting(String merchantUid) {
-        updateToRefundAwaiting(toRefundDto(merchantUid));
+    public void updateToRefundRequired(String merchantUid) {
+        updateToRefundRequired(toRefundDto(merchantUid));
     }
 
     @Transactional
-    public void updateToRefundAwaiting(PaymentDto paymentDto) {
-        updateToRefundAwaiting(toRefundDto(paymentDto));
+    public void updateToRefundRequired(PaymentDto paymentDto) {
+        updateToRefundRequired(toRefundDto(paymentDto));
     }
 
     @Transactional
-    public void updateToConfirmed(PaymentDto paymentDto) {
-        Response response = paymentDto.getResponse();
-        Deposit deposit = depositDao.findByMerchantUid(response.getMerchantUid())
+    public void updateToPaid(PaymentDto paymentDto) {
+        Deposit deposit = depositDao.findByMerchantUid(paymentDto.getMerchantUid())
                 .orElseThrow();
-        DepositStatusEnum targetStatus = DepositStatusEnum.CONFIRMED;
-        int paidAmount = response.getAmount();
+        DepositStatusEnum targetStatus = DepositStatusEnum.PAID;
+        int paidAmount = paymentDto.getAmount();
 
         if (deposit.getPrice() != paidAmount) {
             throw new ValidationFailedException("결제 금액 불일치");
         }
 
         if (!targetStatus.equals(deposit.getStatus())) {
-            deposit.setImpUid(response.getImpUid());
+            deposit.setImpUid(paymentDto.getImpUid());
             deposit.updateStatus(targetStatus);
         }
     }
 
     @Transactional
     public void updateToRefunded(PaymentDto paymentDto) {
-        Response response = paymentDto.getResponse();
-        Deposit deposit = depositDao.findByMerchantUid(response.getMerchantUid())
+        Deposit deposit = depositDao.findByMerchantUid(paymentDto.getMerchantUid())
                 .orElseThrow();
         DepositStatusEnum targetStatus = DepositStatusEnum.REFUNDED;
 
@@ -156,23 +152,22 @@ public class DepositService {
     public void refundAllExceptWinner(long auctionId, Long winnerId) {
         List<DepositStatusEnum> statusEnums = List.of(
                 DepositStatusEnum.CREATED,
-                DepositStatusEnum.CONFIRM_AWAITING,
-                DepositStatusEnum.CONFIRMED
+                DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED,
+                DepositStatusEnum.PAID
         );
         depositDao.findAllByAuctionIdAndStatusIn(auctionId, statusEnums)
                 .forEach(deposit -> {
                     if (winnerId == null || winnerId.equals(deposit.getUserId())) {
                         return;
                     }
-                    updateToRefundAwaiting(deposit.getMerchantUid());
+                    updateToRefundRequired(deposit.getMerchantUid());
                 });
     }
 
     private RefundDto toRefundDto(PaymentDto paymentDto) {
-        Response response = paymentDto.getResponse();
         return RefundDto.builder()
-                .impUid(response.getImpUid())
-                .merchantUid(response.getMerchantUid())
+                .impUid(paymentDto.getImpUid())
+                .merchantUid(paymentDto.getMerchantUid())
                 .build();
     }
 
@@ -193,7 +188,7 @@ public class DepositService {
 
     private Deposit findPendingDepositByUserIdAndAuctionId(Long userId, Long auctionId) {
         List<DepositStatusEnum> pendingStatuses = List.of(
-                DepositStatusEnum.CONFIRM_AWAITING,
+                DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED,
                 DepositStatusEnum.CREATED
         );
         return depositDao.findByUserIdAndAuctionIdAndStatusIn(userId, auctionId, pendingStatuses)

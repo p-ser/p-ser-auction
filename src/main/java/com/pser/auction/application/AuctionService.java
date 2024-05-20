@@ -58,9 +58,9 @@ public class AuctionService {
             auctionStatusProducer.produceFailure(auctionDto);
         };
         Runnable whenAnyBid = () -> {
-            auction.updateStatus(AuctionStatusEnum.PAYMENT_AWAITING);
+            auction.updateStatus(AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED);
             auction.updateWinner();
-            auctionStatusProducer.producePaymentAwaiting(auctionDto);
+            auctionStatusProducer.producePaymentValidationRequired(auctionDto);
         };
         Runnable whenCreatedStatus = () -> {
             auctionDao.delete(auction);

@@ -14,22 +14,22 @@ public enum DepositStatusEnum implements StatusEnum {
     CREATED(0) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(CONFIRM_AWAITING, REFUND_AWAITING);
+            return List.of(PAYMENT_VALIDATION_REQUIRED, REFUND_REQUIRED);
         }
     },
-    CONFIRM_AWAITING(1) {
+    PAYMENT_VALIDATION_REQUIRED(1) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(CREATED, CONFIRMED, REFUND_AWAITING);
+            return List.of(CREATED, PAID, REFUND_REQUIRED);
         }
     },
-    CONFIRMED(2) {
+    PAID(2) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(REFUND_AWAITING);
+            return List.of(REFUND_REQUIRED);
         }
     },
-    REFUND_AWAITING(3) {
+    REFUND_REQUIRED(3) {
         @Override
         public List<StatusEnum> getNext() {
             return List.of(REFUNDED);

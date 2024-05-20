@@ -13,146 +13,141 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentDto {
-    private int code;
-    private String message;
-    private Response response;
+    @JsonAlias({"amount", "paid_amount"})
+    private Integer amount;
 
-    @Getter
-    @Setter
-    public static class Response {
-        @JsonAlias("amount")
-        private Integer amount;
+    @JsonAlias("apply_num")
+    private String applyNum;
 
-        @JsonAlias("apply_num")
-        private String applyNum;
+    @JsonAlias("bank_code")
+    private String bankCode;
 
-        @JsonAlias("bank_code")
-        private String bankCode;
+    @JsonAlias("bank_name")
+    private String bankName;
 
-        @JsonAlias("bank_name")
-        private String bankName;
+    @JsonAlias("buyer_addr")
+    private String buyerAddr;
 
-        @JsonAlias("buyer_addr")
-        private String buyerAddr;
+    @JsonAlias("buyer_email")
+    private String buyerEmail;
 
-        @JsonAlias("buyer_email")
-        private String buyerEmail;
+    @JsonAlias("buyer_name")
+    private String buyerName;
 
-        @JsonAlias("buyer_name")
-        private String buyerName;
+    @JsonAlias("buyer_postcode")
+    private String buyerPostcode;
 
-        @JsonAlias("buyer_postcode")
-        private String buyerPostcode;
+    @JsonAlias("buyer_tel")
+    private String buyerTel;
 
-        @JsonAlias("buyer_tel")
-        private String buyerTel;
+    @JsonAlias("cancel_amount")
+    private Integer cancelAmount;
 
-        @JsonAlias("cancel_amount")
-        private Integer cancelAmount;
+    @JsonAlias("cancel_reason")
+    private String cancelReason;
 
-        @JsonAlias("cancel_reason")
-        private String cancelReason;
+    @JsonAlias("cancelled_at")
+    private Integer cancelledAt;
 
-        @JsonAlias("cancelled_at")
-        private Integer cancelledAt;
+    @JsonAlias("card_code")
+    private String cardCode;
 
-        @JsonAlias("card_code")
-        private String cardCode;
+    @JsonAlias("card_name")
+    private String cardName;
 
-        @JsonAlias("card_name")
-        private String cardName;
+    @JsonAlias("card_number")
+    private String cardNumber;
 
-        @JsonAlias("card_number")
-        private String cardNumber;
+    @JsonAlias("card_quota")
+    private Integer cardQuota;
 
-        @JsonAlias("card_quota")
-        private Integer cardQuota;
+    @JsonAlias("card_type")
+    private Integer cardType;
 
-        @JsonAlias("card_type")
-        private Integer cardType;
+    @JsonAlias("cash_receipt_issued")
+    private Boolean cashReceiptIssued;
 
-        @JsonAlias("cash_receipt_issued")
-        private Boolean cashReceiptIssued;
+    @JsonAlias("channel")
+    private String channel;
 
-        @JsonAlias("channel")
-        private String channel;
+    @JsonAlias("currency")
+    private String currency;
 
-        @JsonAlias("currency")
-        private String currency;
+    @JsonAlias("custom_data")
+    private String customData;
 
-        @JsonAlias("custom_data")
-        private String customData;
+    @JsonAlias("customer_uid")
+    private String customerUid;
 
-        @JsonAlias("customer_uid")
-        private String customerUid;
+    @JsonAlias("customer_uid_usage")
+    private String customerUidUsage;
 
-        @JsonAlias("customer_uid_usage")
-        private String customerUidUsage;
+    @JsonAlias("emb_pg_provider")
+    private String embPgProvider;
 
-        @JsonAlias("emb_pg_provider")
-        private String embPgProvider;
+    @JsonAlias("escrow")
+    private Boolean escrow;
 
-        @JsonAlias("escrow")
-        private Boolean escrow;
+    @JsonAlias("fail_reason")
+    private String failReason;
 
-        @JsonAlias("fail_reason")
-        private String failReason;
+    @JsonAlias("failed_at")
+    private Integer failedAt;
 
-        @JsonAlias("failed_at")
-        private Integer failedAt;
+    @JsonAlias("imp_uid")
+    private String impUid;
 
-        @JsonAlias("imp_uid")
-        private String impUid;
+    @JsonAlias("merchant_uid")
+    private String merchantUid;
 
-        @JsonAlias("merchant_uid")
-        private String merchantUid;
+    @JsonAlias("name")
+    private String name;
 
-        @JsonAlias("name")
-        private String name;
+    @JsonAlias("paid_at")
+    private Integer paidAt;
 
-        @JsonAlias("paid_at")
-        private Integer paidAt;
+    @JsonAlias("pay_method")
+    private String payMethod;
 
-        @JsonAlias("pay_method")
-        private String payMethod;
+    @JsonAlias("pg_id")
+    private String pgId;
 
-        @JsonAlias("pg_id")
-        private String pgId;
+    @JsonAlias("pg_provider")
+    private String pgProvider;
 
-        @JsonAlias("pg_provider")
-        private String pgProvider;
+    @JsonAlias("pg_tid")
+    private String pgTid;
 
-        @JsonAlias("pg_tid")
-        private String pgTid;
+    @JsonAlias("receipt_url")
+    private String receiptUrl;
 
-        @JsonAlias("receipt_url")
-        private String receiptUrl;
+    @JsonAlias("started_at")
+    private Integer startedAt;
 
-        @JsonAlias("started_at")
-        private Integer startedAt;
+    @JsonAlias("status")
+    private String status;
 
-        @JsonAlias("status")
-        private String status;
+    @JsonAlias("user_agent")
+    private String userAgent;
 
-        @JsonAlias("user_agent")
-        private String userAgent;
+    @JsonAlias("vbank_code")
+    private String vbankCode;
 
-        @JsonAlias("vbank_code")
-        private String vbankCode;
+    @JsonAlias("vbank_date")
+    private Integer vbankDate;
 
-        @JsonAlias("vbank_date")
-        private Integer vbankDate;
+    @JsonAlias("vbank_holder")
+    private String vbankHolder;
 
-        @JsonAlias("vbank_holder")
-        private String vbankHolder;
+    @JsonAlias("vbank_issued_at")
+    private Integer vbankIssuedAt;
 
-        @JsonAlias("vbank_issued_at")
-        private Integer vbankIssuedAt;
+    @JsonAlias("vbank_name")
+    private String vbankName;
 
-        @JsonAlias("vbank_name")
-        private String vbankName;
+    @JsonAlias("vbank_num")
+    private String vbankNum;
 
-        @JsonAlias("vbank_num")
-        private String vbankNum;
-    }
+    @JsonAlias("success")
+    private Boolean success;
 }
