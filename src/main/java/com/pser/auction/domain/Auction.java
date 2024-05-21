@@ -3,6 +3,7 @@ package com.pser.auction.domain;
 import com.pser.auction.domain.event.StatusHolderEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
@@ -47,6 +48,7 @@ public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
     private int depositPrice;
 
     @Column(nullable = false)
+    @Convert(converter = AuctionStatusEnumConverter.class)
     private AuctionStatusEnum status = AuctionStatusEnum.CREATED;
 
     @OneToMany(mappedBy = "auction", cascade = {CascadeType.PERSIST,
