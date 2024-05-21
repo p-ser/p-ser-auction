@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 
 
-@OpenAPIDefinition(info = @Info(title = "Member API 명세서", description = "Member API 명세서", version = "v1"))
+@OpenAPIDefinition(info = @Info(title = "Auction API 명세서", description = "Auction API 명세서", version = "v1"))
 @Configuration
 public class SwaggerConfig {
     @Value("${gateway.url}")
