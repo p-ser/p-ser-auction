@@ -43,7 +43,7 @@ public class AuctionRestApi {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
-    @GetMapping("/{auctionId}/check-payment")
+    @PostMapping("/{auctionId}/check-payment")
     public ResponseEntity<ApiResponse<AuctionStatusEnum>> checkPayment(@PathVariable long auctionId,
                                                                        @RequestBody String impUid) {
         AuctionStatusEnum result = auctionService.checkPayment(auctionId, impUid);
