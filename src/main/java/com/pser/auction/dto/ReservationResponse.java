@@ -17,6 +17,10 @@ public class ReservationResponse {
 
     private Long roomId;
 
+    private String merchantUid;
+
+    private String impUid;
+
     private Integer price;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
