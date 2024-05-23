@@ -24,7 +24,7 @@ public class AuctionStatusProducer {
     }
 
     public void producePaymentRequired(AuctionDto auctionDto) {
-        auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_PAYMENT_VALIDATION_REQUIRED, auctionDto);
+        auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_PAYMENT_REQUIRED, auctionDto);
     }
 
     public void producePaymentValidationRequired(PaymentDto paymentDto) {
