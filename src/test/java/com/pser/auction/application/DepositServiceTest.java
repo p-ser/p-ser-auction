@@ -23,6 +23,7 @@ import com.pser.auction.dto.DepositCreateRequest;
 import com.pser.auction.dto.DepositMapper;
 import com.pser.auction.dto.DepositMapperImpl;
 import com.pser.auction.infra.kafka.producer.DepositStatusProducer;
+import io.vavr.control.Try;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -70,7 +71,7 @@ public class DepositServiceTest {
     @DisplayName("보증금 생성 또는 결제 진행중인 보증금 가져오기")
     public void getOrSave() {
         Deposit spiedDeposit = spy(deposit);
-        auction.setStatus(AuctionStatusEnum.ONGOING);
+        auction.setStatus(AuctionStatusEnum.CREATED);
         given(spiedDeposit.getId()).willReturn(123L);
         given(auctionDao.findById(any())).willReturn(Optional.of(auction));
         given(depositDao.save(any())).willReturn(spiedDeposit);
@@ -111,22 +112,14 @@ public class DepositServiceTest {
 
     @Test
     public void test() {
-//        DepositCreateRequest depositCreateRequest = null;
-//        Long value = Optional.ofNullable(depositCreateRequest)
-//                .map(DepositCreateRequest::getUserId)
-//                .orElse(1L);
-        int input = 2;
-        String output = Match(input).of(
-                Case($(1), "one"),
-                Case($(2), "two"),
-                Case($(3), "three"),
-                Case($(), "?"));
-        Match(1).of(
-                Case($(not(is(2))), () -> run(() -> log.error("1 isn't 2"))),
-                Case($(1), () -> run(() -> log.error("1 is 1"))),
-                Case($(3), () -> run(() -> log.error("1 is 3"))),
-                Case($(), () -> run(() -> log.error("none")))
-        );
-        log.error("value=" + output);
+        Try<Integer> try1 = Try.of(() -> {
+            log.error("processing");
+            return 1;
+        });
+        if (try1.isFailure()) {
+            log.error("failed");
+        } else {
+            log.error("value=" + try1.get());
+        }
     }
 }

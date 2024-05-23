@@ -19,10 +19,6 @@ public class AuctionStatusProducer {
         auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_CREATED, auctionDto);
     }
 
-    public void produceCreatedRollback(AuctionDto auctionDto) {
-        auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_CREATED_ROLLBACK, auctionDto);
-    }
-
     public void producePaymentRequired(AuctionDto auctionDto) {
         auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_PAYMENT_REQUIRED, auctionDto);
     }

@@ -9,15 +9,20 @@ import static io.vavr.Predicates.is;
 import com.pser.auction.dao.AuctionDao;
 import com.pser.auction.domain.Auction;
 import com.pser.auction.domain.AuctionStatusEnum;
+import com.pser.auction.domain.ReservationStatusEnum;
 import com.pser.auction.dto.AuctionCreateRequest;
 import com.pser.auction.dto.AuctionDto;
 import com.pser.auction.dto.AuctionMapper;
 import com.pser.auction.dto.PaymentDto;
 import com.pser.auction.dto.RefundDto;
+import com.pser.auction.dto.ReservationResponse;
 import com.pser.auction.exception.NotOngoingAuctionException;
 import com.pser.auction.exception.ValidationFailedException;
+import com.pser.auction.infra.HotelClient;
 import com.pser.auction.infra.kafka.producer.AuctionStatusProducer;
 import io.vavr.control.Try;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,10 +35,21 @@ public class AuctionService {
     private final AuctionDao auctionDao;
     private final AuctionMapper auctionMapper;
     private final AuctionStatusProducer auctionStatusProducer;
+    private final HotelClient hotelClient;
 
+    @Transactional
     public long save(AuctionCreateRequest request) {
-        Auction auction = auctionMapper.toEntity(request);
-        return Try.of(() -> auctionDao.save(auction))
+        ReservationResponse reservationResponse = hotelClient.getReservationById(request.getReservationId());
+        validateAuctionCreateRequest(request, reservationResponse);
+
+        int depositPrice = (int) (reservationResponse.getPrice() / 0.05);
+        LocalDateTime auctionEndAt = LocalDateTime.of(reservationResponse.getStartAt(), LocalTime.MIN);
+        request.setDepositPrice(depositPrice);
+        request.setEndAt(auctionEndAt);
+        return Try.of(() -> {
+                    Auction auction = auctionMapper.toEntity(request);
+                    return auctionDao.save(auction);
+                })
                 .onSuccess((savedAuction) -> auctionStatusProducer.produceCreated(auctionMapper.toDto(savedAuction)))
                 .recover((e) -> auctionDao.findAuctionByReservationId(request.getReservationId())
                         .orElseThrow())
@@ -56,14 +72,6 @@ public class AuctionService {
             updateToPaymentValidationRequired(paymentDto);
         }
         return status;
-    }
-
-    @Transactional
-    public void updateToOngoing(long auctionId) {
-        Auction auction = auctionDao.findById(auctionId)
-                .orElseThrow();
-        AuctionStatusEnum targetStatus = AuctionStatusEnum.ONGOING;
-        auction.updateStatus(targetStatus);
     }
 
     @Transactional
@@ -160,11 +168,6 @@ public class AuctionService {
             auctionStatusProducer.producePaymentRequired(auctionDto);
         };
         Runnable whenCreatedStatus = () -> {
-            auctionDao.delete(auction);
-            auctionStatusProducer.produceCreatedRollback(auctionDto);
-            throw new NotOngoingAuctionException();
-        };
-        Runnable whenOngoingStatus = () -> {
             boolean isEmpty = auction.getBids().isEmpty();
             Match(isEmpty).of(
                     Case($(true), () -> run(whenNoBid)),
@@ -177,7 +180,6 @@ public class AuctionService {
 
         Match(status).of(
                 Case($(is(AuctionStatusEnum.CREATED)), () -> run(whenCreatedStatus)),
-                Case($(is(AuctionStatusEnum.ONGOING)), () -> run(whenOngoingStatus)),
                 Case($(), () -> run(whenElseStatus))
         );
 
@@ -188,5 +190,18 @@ public class AuctionService {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow();
         auctionDao.delete(auction);
+    }
+
+    private void validateAuctionCreateRequest(AuctionCreateRequest request, ReservationResponse reservationResponse) {
+        ReservationStatusEnum reservationStatus = reservationResponse.getStatus();
+        LocalDateTime reservationDDayDateTime = LocalDateTime.of(reservationResponse.getStartAt(), LocalTime.MIN);
+        LocalDateTime oneHourFromNow = LocalDateTime.now().plusHours(1);
+
+        if (!reservationStatus.equals(ReservationStatusEnum.BEFORE_CHECKIN)) {
+            throw new ValidationFailedException("경매할 수 없는 상태의 예약입니다");
+        }
+        if (oneHourFromNow.isAfter(reservationDDayDateTime)) {
+            throw new ValidationFailedException("체크인 일자 자정으로부터 1시간 전까지만 경매할 수 있습니다");
+        }
     }
 }

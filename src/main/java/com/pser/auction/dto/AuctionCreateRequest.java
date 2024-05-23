@@ -22,16 +22,13 @@ public class AuctionCreateRequest {
 
     @NotNull
     @Min(0)
-    private int endPrice;
-
-    @NotNull
-    @Min(0)
     private int price;
 
-    @NotNull
+    @Schema(hidden = true)
+    @Null
     private LocalDateTime endAt;
 
-    @NotNull
-    @Min(0)
+    @Schema(hidden = true)
+    @Null
     private int depositPrice;
 }

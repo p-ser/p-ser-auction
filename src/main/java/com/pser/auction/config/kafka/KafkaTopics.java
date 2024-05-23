@@ -3,7 +3,6 @@ package com.pser.auction.config.kafka;
 public interface KafkaTopics {
     String AUCTION_CREATED = "auction.created";
     String AUCTION_CREATED_ROLLBACK = "auction.created-rollback";
-    String AUCTION_VALIDATION_CHECKED = "auction.validation-checked";
     String AUCTION_PAYMENT_REQUIRED = "auction.payment-required";
     String AUCTION_PAYMENT_VALIDATION_REQUIRED = "auction.payment-validation-required";
     String AUCTION_PAYMENT_VALIDATION_REQUIRED_ROLLBACK = "auction.payment-validation-required-rollback";

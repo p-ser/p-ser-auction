@@ -60,10 +60,9 @@ public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
     private List<Deposit> deposits = new ArrayList<>();
 
     @Builder
-    public Auction(long reservationId, int price, int endPrice, LocalDateTime endAt, int depositPrice) {
+    public Auction(long reservationId, int price, LocalDateTime endAt, int depositPrice) {
         this.reservationId = reservationId;
         this.price = price;
-        this.endPrice = endPrice;
         this.endAt = endAt;
         this.depositPrice = depositPrice;
     }

@@ -43,7 +43,7 @@ public class DepositService {
 
     @Transactional
     public DepositResponse getOrSave(DepositCreateRequest request) {
-        Auction auction = findOnGoingAuctionById(request.getAuctionId());
+        Auction auction = findOngoingAuctionById(request.getAuctionId());
 
         Deposit deposit = findPendingDepositByUserIdAndAuctionId(request.getUserId(), request.getAuctionId());
         if (deposit != null) {
@@ -179,10 +179,11 @@ public class DepositService {
                 .build();
     }
 
-    private Auction findOnGoingAuctionById(Long auctionId) {
+    private Auction findOngoingAuctionById(Long auctionId) {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 경매입니다"));
-        if (!AuctionStatusEnum.ONGOING.equals(auction.getStatus())) {
+        AuctionStatusEnum status = auction.getStatus();
+        if (!status.equals(AuctionStatusEnum.CREATED)) {
             throw new IllegalArgumentException("진행중인 경매가 아닙니다");
         }
         return auction;

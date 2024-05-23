@@ -54,7 +54,6 @@ public class AuctionRestApi {
     @PreAuthorize("@hotelClient.isReservationOwner(request.reservationId, authId)")
     public ResponseEntity<Void> save(@RequestHeader("User-Id") long authId,
                                      @Validated @RequestBody AuctionCreateRequest request) {
-        //TODO: 서비스, DAO 구현 필요
         request.setAuthId(authId);
         long id = auctionService.save(request);
         return ResponseEntity.created(URI.create("/auctions/" + id)).build();
