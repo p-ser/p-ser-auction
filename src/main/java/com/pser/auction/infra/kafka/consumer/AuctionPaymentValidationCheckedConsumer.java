@@ -1,7 +1,6 @@
 package com.pser.auction.infra.kafka.consumer;
 
 import com.pser.auction.application.AuctionService;
-import com.pser.auction.application.DepositService;
 import com.pser.auction.config.kafka.KafkaTopics;
 import com.pser.auction.dto.PaymentDto;
 import com.pser.auction.exception.ValidationFailedException;
@@ -21,7 +20,7 @@ public class AuctionPaymentValidationCheckedConsumer {
     private final AuctionService auctionService;
 
     @RetryableTopic(kafkaTemplate = "paymentDtoValueKafkaTemplate", attempts = "5")
-    @KafkaListener(topics = KafkaTopics.DEPOSIT_PAYMENT_VALIDATION_CHECKED, groupId = "${kafka.consumer-group-id}", containerFactory = "paymentDtoValueListenerContainerFactory")
+    @KafkaListener(topics = KafkaTopics.AUCTION_PAYMENT_VALIDATION_CHECKED, groupId = "${kafka.consumer-group-id}", containerFactory = "paymentDtoValueListenerContainerFactory")
     public void updateToPaymentValidationChecked(PaymentDto paymentDto) {
         Try.run(() -> auctionService.updateToPaid(paymentDto))
                 .recover(ValidationFailedException.class, (e) -> {
