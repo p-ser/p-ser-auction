@@ -39,6 +39,12 @@ public class AuctionService {
     private final AuctionStatusProducer auctionStatusProducer;
     private final HotelClient hotelClient;
 
+    public AuctionDto getByMerchantUid(String merchantUid) {
+        Auction auction = auctionDao.findByMerchantUid(merchantUid)
+                .orElseThrow();
+        return auctionMapper.toDto(auction);
+    }
+
     @Transactional
     public long save(AuctionCreateRequest request) {
         ReservationResponse reservationResponse = hotelClient.getReservationById(request.getReservationId());

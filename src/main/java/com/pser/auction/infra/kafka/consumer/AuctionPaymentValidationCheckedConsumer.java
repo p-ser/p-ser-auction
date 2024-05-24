@@ -3,6 +3,7 @@ package com.pser.auction.infra.kafka.consumer;
 import com.pser.auction.application.AuctionService;
 import com.pser.auction.config.kafka.KafkaTopics;
 import com.pser.auction.domain.AuctionStatusEnum;
+import com.pser.auction.dto.AuctionDto;
 import com.pser.auction.dto.PaymentDto;
 import com.pser.auction.dto.RefundDto;
 import com.pser.auction.dto.StatusUpdateDto;
@@ -29,6 +30,7 @@ public class AuctionPaymentValidationCheckedConsumer {
     @KafkaListener(topics = KafkaTopics.AUCTION_PAYMENT_VALIDATION_CHECKED, groupId = "${kafka.consumer-group-id}", containerFactory = "paymentDtoValueListenerContainerFactory")
     public void updateToPaymentValidationChecked(PaymentDto paymentDto) {
         Try.run(() -> check(paymentDto))
+                .onSuccess(unused -> onSuccess(paymentDto))
                 .recover(SameStatusException.class, (e) -> null)
                 .recover(ValidationFailedException.class, (e) -> refund(paymentDto))
                 .get();
@@ -66,5 +68,10 @@ public class AuctionPaymentValidationCheckedConsumer {
                 .build();
         auctionStatusProducer.produceRefundRequired(refundDto);
         return null;
+    }
+
+    private void onSuccess(PaymentDto paymentDto) {
+        AuctionDto auctionDto = auctionService.getByMerchantUid(paymentDto.getMerchantUid());
+        auctionStatusProducer.producePaid(auctionDto);
     }
 }

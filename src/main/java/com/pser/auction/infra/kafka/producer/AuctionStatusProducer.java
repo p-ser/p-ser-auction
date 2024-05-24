@@ -34,4 +34,8 @@ public class AuctionStatusProducer {
     public void produceFailure(AuctionDto auctionDto) {
         auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_FAILURE, auctionDto);
     }
+
+    public void producePaid(AuctionDto auctionDto) {
+        auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_PAID, auctionDto);
+    }
 }
