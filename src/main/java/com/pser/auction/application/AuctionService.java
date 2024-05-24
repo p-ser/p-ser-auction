@@ -14,15 +14,17 @@ import com.pser.auction.dto.AuctionCreateRequest;
 import com.pser.auction.dto.AuctionDto;
 import com.pser.auction.dto.AuctionMapper;
 import com.pser.auction.dto.PaymentDto;
-import com.pser.auction.dto.RefundDto;
 import com.pser.auction.dto.ReservationResponse;
+import com.pser.auction.dto.StatusUpdateDto;
 import com.pser.auction.exception.NotOngoingAuctionException;
+import com.pser.auction.exception.SameStatusException;
 import com.pser.auction.exception.ValidationFailedException;
 import com.pser.auction.infra.HotelClient;
 import com.pser.auction.infra.kafka.producer.AuctionStatusProducer;
 import io.vavr.control.Try;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -75,80 +77,60 @@ public class AuctionService {
     }
 
     @Transactional
-    public void updateToPaid(PaymentDto paymentDto) {
-        Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
-                .orElseThrow();
-        AuctionStatusEnum status = auction.getStatus();
-        AuctionStatusEnum targetStatus = AuctionStatusEnum.PAID;
-        int paidAmount = paymentDto.getAmount();
-
-        if (auction.getEndPrice() != paidAmount) {
-            throw new ValidationFailedException("결제 금액 불일치");
-        }
-
-        if (status.equals(AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED)) {
-            auction.updateStatus(targetStatus);
-        }
+    public void updateStatus(StatusUpdateDto<AuctionStatusEnum> statusUpdateDto) {
+        updateStatus(statusUpdateDto, null);
     }
 
     @Transactional
-    public void updateToPaymentRequired(PaymentDto paymentDto) {
-        Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
+    public void updateStatus(StatusUpdateDto<AuctionStatusEnum> statusUpdateDto, Consumer<Auction> validator) {
+        Auction reservation = auctionDao.findById(statusUpdateDto.getId())
                 .orElseThrow();
-        AuctionStatusEnum status = auction.getStatus();
-        AuctionStatusEnum targetStatus = AuctionStatusEnum.PAYMENT_REQUIRED;
+        AuctionStatusEnum targetStatus = (AuctionStatusEnum) statusUpdateDto.getTargetStatus();
 
-        if (!status.equals(targetStatus)) {
-            auction.updateStatus(targetStatus);
+        if (validator != null) {
+            validator.accept(reservation);
         }
+
+        reservation.updateStatus(targetStatus);
+    }
+
+    @Transactional
+    public void rollbackStatus(StatusUpdateDto<AuctionStatusEnum> statusUpdateDto) {
+        rollbackStatus(statusUpdateDto, null);
+    }
+
+    @Transactional
+    public void rollbackStatus(StatusUpdateDto<AuctionStatusEnum> statusUpdateDto, Consumer<Auction> validator) {
+        Auction auction = auctionDao.findById(statusUpdateDto.getId())
+                .orElseThrow();
+        AuctionStatusEnum targetStatus = (AuctionStatusEnum) statusUpdateDto.getTargetStatus();
+
+        if (validator != null) {
+            validator.accept(auction);
+        }
+
+        auction.rollbackStatusTo(targetStatus);
     }
 
     @Transactional
     public void updateToPaymentValidationRequired(PaymentDto paymentDto) {
-        Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
-                .orElseThrow();
-        AuctionStatusEnum status = auction.getStatus();
-        AuctionStatusEnum targetStatus = AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED;
+        Try.run(() -> {
+                    StatusUpdateDto<AuctionStatusEnum> statusUpdateDto = StatusUpdateDto.<AuctionStatusEnum>builder()
+                            .merchantUid(paymentDto.getMerchantUid())
+                            .targetStatus(AuctionStatusEnum.PAYMENT_VALIDATION_REQUIRED)
+                            .build();
+                    updateStatus(statusUpdateDto, auction -> {
+                        int paidAmount = paymentDto.getAmount();
 
-        int paidAmount = paymentDto.getAmount();
-
-        if (auction.getEndPrice() != paidAmount) {
-            throw new ValidationFailedException("결제 금액 불일치");
-        }
-
-        if (status.equals(AuctionStatusEnum.PAYMENT_REQUIRED)) {
-            auction.updateImpUid(paymentDto.getImpUid());
-            auction.updateStatus(targetStatus);
-            auctionStatusProducer.producePaymentValidationRequired(paymentDto);
-        }
-    }
-
-    @Transactional
-    public void rollbackToPaymentRequired(String merchantUid) {
-        Auction auction = auctionDao.findByMerchantUid(merchantUid)
-                .orElseThrow();
-        AuctionStatusEnum status = auction.getStatus();
-        AuctionStatusEnum targetStatus = AuctionStatusEnum.PAYMENT_REQUIRED;
-
-        if (!status.equals(targetStatus)) {
-            auction.updateStatus(targetStatus);
-        }
-    }
-
-    @Transactional
-    public void updateToRefundRequired(PaymentDto paymentDto) {
-        Auction auction = auctionDao.findByMerchantUid(paymentDto.getMerchantUid())
-                .orElseThrow();
-        AuctionStatusEnum targetStatus = AuctionStatusEnum.REFUND_REQUIRED;
-
-        if (!targetStatus.equals(auction.getStatus())) {
-            auction.updateStatus(targetStatus);
-            RefundDto refundDto = RefundDto.builder()
-                    .impUid(paymentDto.getImpUid())
-                    .merchantUid(paymentDto.getMerchantUid())
-                    .build();
-            auctionStatusProducer.produceRefundRequired(refundDto);
-        }
+                        if (auction.getEndPrice() != paidAmount) {
+                            throw new ValidationFailedException("결제 금액 불일치");
+                        }
+                        auction.updateImpUid(paymentDto.getImpUid());
+                    });
+                })
+                .onSuccess(unused -> auctionStatusProducer.producePaymentValidationRequired(paymentDto))
+                .recover(SameStatusException.class, e -> null)
+                .get();
     }
 
     @Transactional

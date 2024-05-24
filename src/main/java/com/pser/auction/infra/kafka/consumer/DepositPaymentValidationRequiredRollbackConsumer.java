@@ -2,6 +2,10 @@ package com.pser.auction.infra.kafka.consumer;
 
 import com.pser.auction.application.DepositService;
 import com.pser.auction.config.kafka.KafkaTopics;
+import com.pser.auction.domain.DepositStatusEnum;
+import com.pser.auction.dto.StatusUpdateDto;
+import com.pser.auction.exception.SameStatusException;
+import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,6 +21,15 @@ public class DepositPaymentValidationRequiredRollbackConsumer {
     @RetryableTopic(kafkaTemplate = "stringValueKafkaTemplate", attempts = "5")
     @KafkaListener(topics = KafkaTopics.DEPOSIT_PAYMENT_VALIDATION_REQUIRED_ROLLBACK, groupId = "${kafka.consumer-group-id}", containerFactory = "stringValueListenerContainerFactory")
     public void rollbackPaymentValidationRequired(String merchantUid) {
-        depositService.rollbackToCreated(merchantUid);
+        Try.run(() -> {
+                    StatusUpdateDto<DepositStatusEnum> statusUpdateDto = StatusUpdateDto.<DepositStatusEnum>builder()
+                            .merchantUid(merchantUid)
+                            .targetStatus(DepositStatusEnum.CREATED)
+                            .build();
+
+                    depositService.rollbackStatus(statusUpdateDto);
+                })
+                .recover(SameStatusException.class, e -> null)
+                .get();
     }
 }

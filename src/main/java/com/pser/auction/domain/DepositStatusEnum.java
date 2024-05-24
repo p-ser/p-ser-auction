@@ -20,7 +20,7 @@ public enum DepositStatusEnum implements StatusEnum {
     PAYMENT_VALIDATION_REQUIRED(1) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(CREATED, PAID, REFUND_REQUIRED);
+            return List.of(PAID, REFUND_REQUIRED);
         }
     },
     PAID(2) {

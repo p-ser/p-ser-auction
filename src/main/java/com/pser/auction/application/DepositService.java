@@ -11,9 +11,13 @@ import com.pser.auction.dto.DepositMapper;
 import com.pser.auction.dto.DepositResponse;
 import com.pser.auction.dto.PaymentDto;
 import com.pser.auction.dto.RefundDto;
+import com.pser.auction.dto.StatusUpdateDto;
+import com.pser.auction.exception.SameStatusException;
 import com.pser.auction.exception.ValidationFailedException;
 import com.pser.auction.infra.kafka.producer.DepositStatusProducer;
+import io.vavr.control.Try;
 import java.util.List;
+import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -75,79 +79,74 @@ public class DepositService {
     }
 
     @Transactional
-    public void rollbackToCreated(String merchantUid) {
-        Deposit deposit = depositDao.findByMerchantUid(merchantUid)
+    public void updateStatus(StatusUpdateDto<DepositStatusEnum> statusUpdateDto) {
+        updateStatus(statusUpdateDto, null);
+    }
+
+    @Transactional
+    public void updateStatus(StatusUpdateDto<DepositStatusEnum> statusUpdateDto, Consumer<Deposit> validator) {
+        Deposit reservation = depositDao.findById(statusUpdateDto.getId())
                 .orElseThrow();
-        deposit.updateStatus(DepositStatusEnum.CREATED);
+        DepositStatusEnum targetStatus = (DepositStatusEnum) statusUpdateDto.getTargetStatus();
+
+        if (validator != null) {
+            validator.accept(reservation);
+        }
+
+        reservation.updateStatus(targetStatus);
+    }
+
+    @Transactional
+    public void rollbackStatus(StatusUpdateDto<DepositStatusEnum> statusUpdateDto) {
+        rollbackStatus(statusUpdateDto, null);
+    }
+
+    @Transactional
+    public void rollbackStatus(StatusUpdateDto<DepositStatusEnum> statusUpdateDto, Consumer<Deposit> validator) {
+        Deposit reservation = depositDao.findById(statusUpdateDto.getId())
+                .orElseThrow();
+        DepositStatusEnum targetStatus = (DepositStatusEnum) statusUpdateDto.getTargetStatus();
+
+        if (validator != null) {
+            validator.accept(reservation);
+        }
+
+        reservation.rollbackStatusTo(targetStatus);
     }
 
     @Transactional
     public void updateToPaymentValidationRequired(PaymentDto paymentDto) {
-        Deposit deposit = depositDao.findByMerchantUid(paymentDto.getMerchantUid())
-                .orElseThrow();
-        DepositStatusEnum targetStatus = DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED;
-        int paidAmount = paymentDto.getAmount();
+        Try.run(() -> {
+                    StatusUpdateDto<DepositStatusEnum> statusUpdateDto = StatusUpdateDto.<DepositStatusEnum>builder()
+                            .merchantUid(paymentDto.getMerchantUid())
+                            .targetStatus(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED)
+                            .build();
+                    updateStatus(statusUpdateDto, deposit -> {
+                        int paidAmount = paymentDto.getAmount();
 
-        if (deposit.getPrice() != paidAmount) {
-            throw new ValidationFailedException("결제 금액 불일치");
-        }
-
-        if (!targetStatus.equals(deposit.getStatus())) {
-            deposit.updateImpUid(paymentDto.getImpUid());
-            deposit.updateStatus(targetStatus);
-            depositStatusProducer.producePaymentValidationRequired(paymentDto);
-        }
-    }
-
-    @Transactional
-    public void updateToRefundRequired(RefundDto refundDto) {
-        Deposit deposit = depositDao.findByMerchantUid(refundDto.getMerchantUid())
-                .orElseThrow();
-        DepositStatusEnum targetStatus = DepositStatusEnum.REFUND_REQUIRED;
-
-        if (!targetStatus.equals(deposit.getStatus())) {
-            deposit.updateStatus(targetStatus);
-            depositStatusProducer.produceRefundRequired(refundDto);
-        }
+                        if (deposit.getPrice() != paidAmount) {
+                            throw new ValidationFailedException("결제 금액 불일치");
+                        }
+                        deposit.updateImpUid(paymentDto.getImpUid());
+                    });
+                })
+                .onSuccess(unused -> depositStatusProducer.producePaymentValidationRequired(paymentDto))
+                .recover(SameStatusException.class, e -> null)
+                .get();
     }
 
     @Transactional
     public void updateToRefundRequired(String merchantUid) {
-        updateToRefundRequired(toRefundDto(merchantUid));
-    }
+        StatusUpdateDto<DepositStatusEnum> statusUpdateDto = StatusUpdateDto.<DepositStatusEnum>builder()
+                .merchantUid(merchantUid)
+                .targetStatus(DepositStatusEnum.REFUND_REQUIRED)
+                .build();
+        updateStatus(statusUpdateDto);
 
-    @Transactional
-    public void updateToRefundRequired(PaymentDto paymentDto) {
-        updateToRefundRequired(toRefundDto(paymentDto));
-    }
-
-    @Transactional
-    public void updateToPaid(PaymentDto paymentDto) {
-        Deposit deposit = depositDao.findByMerchantUid(paymentDto.getMerchantUid())
-                .orElseThrow();
-        DepositStatusEnum status = deposit.getStatus();
-        DepositStatusEnum targetStatus = DepositStatusEnum.PAID;
-        int paidAmount = paymentDto.getAmount();
-
-        if (deposit.getPrice() != paidAmount) {
-            throw new ValidationFailedException("결제 금액 불일치");
-        }
-
-        if (status.equals(DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED)) {
-            deposit.updateStatus(targetStatus);
-        }
-    }
-
-    @Transactional
-    public void updateToRefunded(PaymentDto paymentDto) {
-        Deposit deposit = depositDao.findByMerchantUid(paymentDto.getMerchantUid())
-                .orElseThrow();
-        DepositStatusEnum status = deposit.getStatus();
-        DepositStatusEnum targetStatus = DepositStatusEnum.REFUNDED;
-
-        if (!targetStatus.equals(status)) {
-            deposit.updateStatus(targetStatus);
-        }
+        RefundDto refundDto = RefundDto.builder()
+                .merchantUid(merchantUid)
+                .build();
+        depositStatusProducer.produceRefundRequired(refundDto);
     }
 
     @Transactional
@@ -164,19 +163,6 @@ public class DepositService {
                     }
                     updateToRefundRequired(deposit.getMerchantUid());
                 });
-    }
-
-    private RefundDto toRefundDto(PaymentDto paymentDto) {
-        return RefundDto.builder()
-                .impUid(paymentDto.getImpUid())
-                .merchantUid(paymentDto.getMerchantUid())
-                .build();
-    }
-
-    private RefundDto toRefundDto(String merchantUid) {
-        return RefundDto.builder()
-                .merchantUid(merchantUid)
-                .build();
     }
 
     private Auction findOngoingAuctionById(Long auctionId) {
