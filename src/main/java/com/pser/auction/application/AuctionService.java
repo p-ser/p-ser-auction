@@ -45,6 +45,12 @@ public class AuctionService {
         return auctionMapper.toDto(auction);
     }
 
+    public AuctionDto getById(long auctionId) {
+        Auction auction = auctionDao.findById(auctionId)
+                .orElseThrow();
+        return auctionMapper.toDto(auction);
+    }
+
     @Transactional
     public long save(AuctionCreateRequest request) {
         ReservationResponse reservationResponse = hotelClient.getReservationById(request.getReservationId());
@@ -91,7 +97,7 @@ public class AuctionService {
     public void updateStatus(StatusUpdateDto<AuctionStatusEnum> statusUpdateDto, Consumer<Auction> validator) {
         Auction reservation = auctionDao.findById(statusUpdateDto.getId())
                 .orElseThrow();
-        AuctionStatusEnum targetStatus = (AuctionStatusEnum) statusUpdateDto.getTargetStatus();
+        AuctionStatusEnum targetStatus = statusUpdateDto.getTargetStatus();
 
         if (validator != null) {
             validator.accept(reservation);
@@ -109,7 +115,7 @@ public class AuctionService {
     public void rollbackStatus(StatusUpdateDto<AuctionStatusEnum> statusUpdateDto, Consumer<Auction> validator) {
         Auction auction = auctionDao.findById(statusUpdateDto.getId())
                 .orElseThrow();
-        AuctionStatusEnum targetStatus = (AuctionStatusEnum) statusUpdateDto.getTargetStatus();
+        AuctionStatusEnum targetStatus = statusUpdateDto.getTargetStatus();
 
         if (validator != null) {
             validator.accept(auction);

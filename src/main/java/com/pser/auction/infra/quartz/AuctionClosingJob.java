@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class AuctionClosingJob extends QuartzJobBean {
-    AuctionService auctionService;
-    DepositService depositService;
+    private final AuctionService auctionService;
+    private final DepositService depositService;
 
     @Override
     protected void executeInternal(JobExecutionContext context) {

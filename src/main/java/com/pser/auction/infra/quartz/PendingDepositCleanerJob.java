@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class PendingDepositCleanerJob extends QuartzJobBean {
-    DepositService depositService;
+    private final DepositService depositService;
 
     @Override
     protected void executeInternal(JobExecutionContext context) {
