@@ -14,7 +14,7 @@ public enum AuctionStatusEnum implements StatusEnum {
     CREATED(0) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(PAYMENT_REQUIRED, FAILURE);
+            return List.of(PAYMENT_REQUIRED, NO_BID);
         }
     },
     PAYMENT_REQUIRED(1) {
@@ -47,7 +47,7 @@ public enum AuctionStatusEnum implements StatusEnum {
             return null;
         }
     },
-    FAILURE(6) {
+    NO_BID(6) {
         @Override
         public List<StatusEnum> getNext() {
             return null;

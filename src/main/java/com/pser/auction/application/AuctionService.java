@@ -147,8 +147,8 @@ public class AuctionService {
         AuctionStatusEnum status = auction.getStatus();
 
         Runnable whenNoBid = () -> {
-            auction.updateStatus(AuctionStatusEnum.FAILURE);
-            auctionStatusProducer.produceFailure(auctionDto);
+            auction.updateStatus(AuctionStatusEnum.NO_BID);
+            auctionStatusProducer.produceNoBid(auctionDto);
         };
         Runnable whenAnyBid = () -> {
             auction.updateStatus(AuctionStatusEnum.PAYMENT_REQUIRED);

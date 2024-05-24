@@ -31,8 +31,8 @@ public class AuctionStatusProducer {
         refundDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_REFUND_REQUIRED, refundDto);
     }
 
-    public void produceFailure(AuctionDto auctionDto) {
-        auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_FAILURE, auctionDto);
+    public void produceNoBid(AuctionDto auctionDto) {
+        auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_NO_BID, auctionDto);
     }
 
     public void producePaid(AuctionDto auctionDto) {
