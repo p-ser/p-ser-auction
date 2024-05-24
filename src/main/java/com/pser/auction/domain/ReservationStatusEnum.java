@@ -20,7 +20,7 @@ public enum ReservationStatusEnum implements StatusEnum {
     PAYMENT_VALIDATION_REQUIRED(1) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(CREATED, BEFORE_CHECKIN);
+            return List.of(BEFORE_CHECKIN);
         }
     }, // 결제 검증 대기
     BEFORE_CHECKIN(2) {
@@ -38,7 +38,7 @@ public enum ReservationStatusEnum implements StatusEnum {
     REFUND_REQUIRED(4) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(REFUNDED, BEFORE_CHECKIN);
+            return List.of(REFUNDED);
         }
     }, // 환불 대기
     REFUNDED(5) {
@@ -50,16 +50,28 @@ public enum ReservationStatusEnum implements StatusEnum {
     AUCTION_ONGOING(6) {
         @Override
         public List<StatusEnum> getNext() {
-            return List.of(AUCTION_FAILURE, AUCTION_SUCCESS, BEFORE_CHECKIN);
+            return List.of(AUCTION_FAILURE, BID_PAYBACK_REQUIRED);
         }
     }, // 경매 중
-    AUCTION_FAILURE(7) {
+    BID_PAYBACK_REQUIRED(7) {
+        @Override
+        public List<StatusEnum> getNext() {
+            return List.of(DEPOSIT_PAYBACK_REQUIRED, AUCTION_SUCCESS);
+        }
+    }, // 낙찰금 지급 대기
+    DEPOSIT_PAYBACK_REQUIRED(8) {
+        @Override
+        public List<StatusEnum> getNext() {
+            return List.of(AUCTION_FAILURE);
+        }
+    }, // 낙찰금 지급 거부 이후 보증금 지급 대기
+    AUCTION_FAILURE(9) {
         @Override
         public List<StatusEnum> getNext() {
             return List.of(PAST);
         }
     }, // 경매 실패 (유찰, 낙찰금 지불 거부)
-    AUCTION_SUCCESS(8) {
+    AUCTION_SUCCESS(10) {
         @Override
         public List<StatusEnum> getNext() {
             return List.of();
