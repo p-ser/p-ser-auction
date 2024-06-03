@@ -5,7 +5,7 @@ RUN apk add --no-cache tzdata && \
     cp /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone
 
-VOLUME /shared
+VOLUME /share
 
 ARG JAR_FILE=build/libs/*.jar
 COPY ${JAR_FILE} app.jar
