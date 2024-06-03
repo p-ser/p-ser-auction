@@ -1,7 +1,6 @@
 package com.pser.auction.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import java.time.LocalDateTime;
@@ -20,8 +19,8 @@ public class AuctionCreateRequest {
     @Null
     private Long authId;
 
-    @NotNull
-    @Min(0)
+    @Schema(hidden = true)
+    @Null
     private int price;
 
     @Schema(hidden = true)

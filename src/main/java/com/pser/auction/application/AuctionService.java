@@ -54,10 +54,11 @@ public class AuctionService {
     @Transactional
     public long save(AuctionCreateRequest request) {
         ReservationResponse reservationResponse = hotelClient.getReservationById(request.getReservationId());
-        validateAuctionCreateRequest(request, reservationResponse);
+        validateAuctionCreateRequest(reservationResponse);
 
         int depositPrice = (int) (reservationResponse.getPrice() / 0.05);
         LocalDateTime auctionEndAt = LocalDateTime.of(reservationResponse.getStartAt(), LocalTime.MIN);
+        request.setPrice(reservationResponse.getPrice());
         request.setDepositPrice(depositPrice);
         request.setEndAt(auctionEndAt);
         return Try.of(() -> {
@@ -186,7 +187,7 @@ public class AuctionService {
         auctionDao.delete(auction);
     }
 
-    private void validateAuctionCreateRequest(AuctionCreateRequest request, ReservationResponse reservationResponse) {
+    private void validateAuctionCreateRequest(ReservationResponse reservationResponse) {
         ReservationStatusEnum reservationStatus = reservationResponse.getStatus();
         LocalDateTime reservationDDayDateTime = LocalDateTime.of(reservationResponse.getStartAt(), LocalTime.MIN);
         LocalDateTime oneHourFromNow = LocalDateTime.now().plusHours(1);
