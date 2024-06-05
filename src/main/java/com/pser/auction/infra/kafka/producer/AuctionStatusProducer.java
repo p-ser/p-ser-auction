@@ -19,6 +19,14 @@ public class AuctionStatusProducer {
         auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_CREATED, auctionDto);
     }
 
+    public void produceUpdated(AuctionDto auctionDto) {
+        auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_UPDATED, auctionDto);
+    }
+
+    public void produceDeleted(AuctionDto auctionDto) {
+        auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_DELETED, auctionDto);
+    }
+
     public void producePaymentRequired(AuctionDto auctionDto) {
         auctionDtoValueKafkaTemplate.send(KafkaTopics.AUCTION_PAYMENT_REQUIRED, auctionDto);
     }

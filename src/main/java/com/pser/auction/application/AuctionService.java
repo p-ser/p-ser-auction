@@ -96,15 +96,16 @@ public class AuctionService {
 
     @Transactional
     public void updateStatus(StatusUpdateDto<AuctionStatusEnum> statusUpdateDto, Consumer<Auction> validator) {
-        Auction reservation = auctionDao.findById(statusUpdateDto.getId())
+        Auction auction = auctionDao.findById(statusUpdateDto.getId())
                 .orElseThrow();
         AuctionStatusEnum targetStatus = statusUpdateDto.getTargetStatus();
 
         if (validator != null) {
-            validator.accept(reservation);
+            validator.accept(auction);
         }
 
-        reservation.updateStatus(targetStatus);
+        auction.updateStatus(targetStatus);
+        auctionStatusProducer.produceUpdated(auctionMapper.toDto(auction));
     }
 
     @Transactional
@@ -123,6 +124,7 @@ public class AuctionService {
         }
 
         auction.rollbackStatusTo(targetStatus);
+        auctionStatusProducer.produceUpdated(auctionMapper.toDto(auction));
     }
 
     @Transactional
@@ -185,6 +187,7 @@ public class AuctionService {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow();
         auctionDao.delete(auction);
+        auctionStatusProducer.produceDeleted(auctionMapper.toDto(auction));
     }
 
     private void validateAuctionCreateRequest(ReservationResponse reservationResponse) {
