@@ -3,26 +3,36 @@ package com.pser.auction.dto;
 import com.pser.auction.domain.AuctionStatusEnum;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuctionDto {
-    private long id;
+    private Long id;
 
-    private long reservationId;
+    private LocalDateTime createdAt;
 
-    private int price;
+    private LocalDateTime updatedAt;
 
-    private int endPrice;
+    private Long reservationId;
+
+    private String merchantUid;
+
+    private String impUid;
+
+    private Long winnerId;
+
+    private Integer price;
+
+    private Integer endPrice;
 
     private LocalDateTime endAt;
 
-    private int depositPrice;
+    private Integer depositPrice;
 
     private AuctionStatusEnum status;
 }
