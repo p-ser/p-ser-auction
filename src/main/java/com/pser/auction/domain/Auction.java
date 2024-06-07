@@ -71,6 +71,13 @@ public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
         this.impUid = impUid;
     }
 
+    public void updatePrice(int price) {
+        if (this.price >= price) {
+            throw new IllegalArgumentException("해당 금액으로는 입찰할 수 없습니다");
+        }
+        this.price = price;
+    }
+
     public void updateWinner() {
         if (!status.equals(AuctionStatusEnum.PAYMENT_REQUIRED)) {
             throw new IllegalArgumentException();
