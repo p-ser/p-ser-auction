@@ -12,10 +12,10 @@ import lombok.Data;
 @AllArgsConstructor
 public class DepositCreateRequest {
     @NotNull
-    private long userId;
+    private Long userId;
 
     @NotNull
-    private long auctionId;
+    private Long auctionId;
 
     @Schema(hidden = true)
     private Auction auction;

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,7 @@ public class DepositApi {
 
     @PostMapping
     public ResponseEntity<ApiResponse<DepositResponse>> save(@PathVariable long auctionId,
-                                                             @RequestBody DepositCreateRequest request) {
+                                                             @Validated @RequestBody DepositCreateRequest request) {
         request.setAuctionId(auctionId);
         DepositResponse response = depositService.getOrSave(request);
         return ResponseEntity.ok(ApiResponse.success(response));

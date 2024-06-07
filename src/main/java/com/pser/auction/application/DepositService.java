@@ -17,6 +17,7 @@ import com.pser.auction.exception.ValidationFailedException;
 import com.pser.auction.infra.kafka.producer.DepositStatusProducer;
 import io.vavr.control.Try;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,16 +50,15 @@ public class DepositService {
     public DepositResponse getOrSave(DepositCreateRequest request) {
         Auction auction = findOngoingAuctionById(request.getAuctionId());
 
-        Deposit deposit = findPendingDepositByUserIdAndAuctionId(request.getUserId(), request.getAuctionId());
-        if (deposit != null) {
-            return depositMapper.toResponse(deposit);
-        }
-
-        request.setAuction(auction);
-        deposit = depositMapper.toEntity(request);
-        deposit = depositDao.save(deposit);
-        depositStatusProducer.produceCreated(deposit.getMerchantUid());
-        return depositMapper.toResponse(deposit);
+        return findPendingDepositByUserIdAndAuctionId(request)
+                .map(depositMapper::toResponse)
+                .orElseGet(() -> {
+                    request.setAuction(auction);
+                    Deposit deposit = depositMapper.toEntity(request);
+                    deposit = depositDao.save(deposit);
+                    depositStatusProducer.produceCreated(deposit.getMerchantUid());
+                    return depositMapper.toResponse(deposit);
+                });
     }
 
     @Transactional
@@ -87,7 +87,7 @@ public class DepositService {
     public void updateStatus(StatusUpdateDto<DepositStatusEnum> statusUpdateDto, Consumer<Deposit> validator) {
         Deposit reservation = depositDao.findById(statusUpdateDto.getId())
                 .orElseThrow();
-        DepositStatusEnum targetStatus = (DepositStatusEnum) statusUpdateDto.getTargetStatus();
+        DepositStatusEnum targetStatus = statusUpdateDto.getTargetStatus();
 
         if (validator != null) {
             validator.accept(reservation);
@@ -105,7 +105,7 @@ public class DepositService {
     public void rollbackStatus(StatusUpdateDto<DepositStatusEnum> statusUpdateDto, Consumer<Deposit> validator) {
         Deposit reservation = depositDao.findById(statusUpdateDto.getId())
                 .orElseThrow();
-        DepositStatusEnum targetStatus = (DepositStatusEnum) statusUpdateDto.getTargetStatus();
+        DepositStatusEnum targetStatus = statusUpdateDto.getTargetStatus();
 
         if (validator != null) {
             validator.accept(reservation);
@@ -175,12 +175,15 @@ public class DepositService {
         return auction;
     }
 
-    private Deposit findPendingDepositByUserIdAndAuctionId(Long userId, Long auctionId) {
+    private Optional<Deposit> findPendingDepositByUserIdAndAuctionId(DepositCreateRequest request) {
+        Long userId = request.getUserId();
+        Long auctionId = request.getAuctionId();
         List<DepositStatusEnum> pendingStatuses = List.of(
                 DepositStatusEnum.PAYMENT_VALIDATION_REQUIRED,
                 DepositStatusEnum.CREATED
         );
-        return depositDao.findByUserIdAndAuctionIdAndStatusIn(userId, auctionId, pendingStatuses)
-                .orElse(null);
+        return depositDao.findAllByUserIdAndAuctionIdAndStatusIn(userId, auctionId, pendingStatuses)
+                .stream()
+                .findFirst();
     }
 }
