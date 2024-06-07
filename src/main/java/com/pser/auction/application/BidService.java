@@ -1,5 +1,6 @@
 package com.pser.auction.application;
 
+import com.pser.auction.config.aop.DistributeLock;
 import com.pser.auction.dao.AuctionDao;
 import com.pser.auction.dao.BidDao;
 import com.pser.auction.dao.DepositDao;
@@ -35,6 +36,7 @@ public class BidService {
         return result.map(bidMapper::toResponse);
     }
 
+    @DistributeLock(key = "'bid-for-auction' + #request.getAuctionId()")
     public long save(BidCreateRequest request) {
         Auction auction = auctionDao.findById(request.getAuctionId())
                 .orElseThrow();
