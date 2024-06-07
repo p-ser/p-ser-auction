@@ -1,4 +1,4 @@
-package com.pser.auction;
+package com.pser.auction.util;
 
 import java.util.Date;
 import java.util.Objects;

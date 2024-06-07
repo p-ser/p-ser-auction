@@ -1,6 +1,6 @@
 package com.pser.auction.infra.kafka.consumer;
 
-import com.pser.auction.Util;
+import com.pser.auction.util.Util;
 import com.pser.auction.config.kafka.KafkaTopics;
 import com.pser.auction.infra.quartz.PendingDepositCleanerJob;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.pser.auction.config;
 
-import com.pser.auction.Util;
+import com.pser.auction.util.Util;
 import lombok.RequiredArgsConstructor;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
