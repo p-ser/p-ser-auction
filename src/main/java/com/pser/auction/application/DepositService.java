@@ -55,8 +55,9 @@ public class DepositService {
                 .orElseGet(() -> {
                     request.setAuction(auction);
                     Deposit deposit = depositMapper.toEntity(request);
+                    deposit.addOnCreatedEventHandler(
+                            d -> depositStatusProducer.produceCreated(((Deposit) d).getMerchantUid()));
                     deposit = depositDao.save(deposit);
-                    depositStatusProducer.produceCreated(deposit.getMerchantUid());
                     return depositMapper.toResponse(deposit);
                 });
     }
@@ -73,6 +74,7 @@ public class DepositService {
                     .amount(deposit.getPrice())
                     .merchantUid(deposit.getMerchantUid())
                     .build();
+            deposit.addOnUpdatedEventHandler(d -> depositStatusProducer.producePaymentValidationRequired(paymentDto));
             updateToPaymentValidationRequired(paymentDto);
         }
         return status;
@@ -130,7 +132,6 @@ public class DepositService {
                         deposit.updateImpUid(paymentDto.getImpUid());
                     });
                 })
-                .onSuccess(unused -> depositStatusProducer.producePaymentValidationRequired(paymentDto))
                 .recover(SameStatusException.class, e -> null)
                 .get();
     }

@@ -63,9 +63,10 @@ public class AuctionService {
         request.setEndAt(auctionEndAt);
         return Try.of(() -> {
                     Auction auction = auctionMapper.toEntity(request);
+                    auction.addOnCreatedEventHandler(
+                            a -> auctionStatusProducer.produceCreated(auctionMapper.toDto((Auction) a)));
                     return auctionDao.save(auction);
                 })
-                .onSuccess((savedAuction) -> auctionStatusProducer.produceCreated(auctionMapper.toDto(savedAuction)))
                 .recover((e) -> auctionDao.findAuctionByReservationId(request.getReservationId())
                         .orElseThrow())
                 .get()
@@ -84,6 +85,7 @@ public class AuctionService {
                     .amount(auction.getEndPrice())
                     .merchantUid(auction.getMerchantUid())
                     .build();
+            auction.addOnUpdatedEventHandler(a -> auctionStatusProducer.producePaymentValidationRequired(paymentDto));
             updateToPaymentValidationRequired(paymentDto);
         }
         return status;
@@ -104,8 +106,8 @@ public class AuctionService {
             validator.accept(auction);
         }
 
+        auction.addOnUpdatedEventHandler(a -> auctionStatusProducer.produceUpdated(auctionMapper.toDto((Auction) a)));
         auction.updateStatus(targetStatus);
-        auctionStatusProducer.produceUpdated(auctionMapper.toDto(auction));
     }
 
     @Transactional
@@ -123,8 +125,8 @@ public class AuctionService {
             validator.accept(auction);
         }
 
+        auction.addOnUpdatedEventHandler(a -> auctionStatusProducer.produceUpdated(auctionMapper.toDto((Auction) a)));
         auction.rollbackStatusTo(targetStatus);
-        auctionStatusProducer.produceUpdated(auctionMapper.toDto(auction));
     }
 
     @Transactional
@@ -143,7 +145,6 @@ public class AuctionService {
                         auction.updateImpUid(paymentDto.getImpUid());
                     });
                 })
-                .onSuccess(unused -> auctionStatusProducer.producePaymentValidationRequired(paymentDto))
                 .recover(SameStatusException.class, e -> null)
                 .get();
     }
@@ -152,17 +153,17 @@ public class AuctionService {
     public Long closeAuction(long auctionId) {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow();
-        AuctionDto auctionDto = auctionMapper.toDto(auction);
         AuctionStatusEnum status = auction.getStatus();
 
         Runnable whenNoBid = () -> {
+            auction.addOnUpdatedEventHandler(a -> auctionStatusProducer.produceNoBid(auctionMapper.toDto((Auction) a)));
             auction.updateStatus(AuctionStatusEnum.NO_BID);
-            auctionStatusProducer.produceNoBid(auctionDto);
         };
         Runnable whenAnyBid = () -> {
+            auction.addOnUpdatedEventHandler(
+                    a -> auctionStatusProducer.producePaymentRequired(auctionMapper.toDto((Auction) a)));
             auction.updateStatus(AuctionStatusEnum.PAYMENT_REQUIRED);
             auction.updateWinner();
-            auctionStatusProducer.producePaymentRequired(auctionDto);
         };
         Runnable whenCreatedStatus = () -> {
             boolean isEmpty = auction.getBids().isEmpty();
@@ -186,8 +187,8 @@ public class AuctionService {
     public void delete(long auctionId) {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow();
+        auction.addOnDeletedEventHandler(a -> auctionStatusProducer.produceDeleted(auctionMapper.toDto((Auction) a)));
         auctionDao.delete(auction);
-        auctionStatusProducer.produceDeleted(auctionMapper.toDto(auction));
     }
 
     private void validateAuctionCreateRequest(ReservationResponse reservationResponse) {
