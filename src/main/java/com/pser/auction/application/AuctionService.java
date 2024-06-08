@@ -184,6 +184,7 @@ public class AuctionService {
         return auction.getWinnerId();
     }
 
+    @Transactional
     public void delete(long auctionId) {
         Auction auction = auctionDao.findById(auctionId)
                 .orElseThrow();
