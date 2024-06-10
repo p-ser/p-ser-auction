@@ -36,8 +36,14 @@ public class DepositPaymentValidationCheckedConsumer {
 
     @DltHandler
     public void dltHandler(ConsumerRecord<String, PaymentDto> record) {
-        PaymentDto paymentDto = record.value();
-        refund(paymentDto);
+        Try.run(() -> {
+                    PaymentDto paymentDto = record.value();
+                    refund(paymentDto);
+                }).recover(Exception.class, e -> {
+                    log.error("dlt failed by error: " + e.getMessage());
+                    return null;
+                })
+                .get();
     }
 
     private void check(PaymentDto paymentDto) {
