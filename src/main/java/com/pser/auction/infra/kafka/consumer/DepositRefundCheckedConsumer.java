@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 public class DepositRefundCheckedConsumer {
     private final DepositService depositService;
 
-    @RetryableTopic(kafkaTemplate = "paymentDtoValueKafkaTemplate", attempts = "5")
+    @RetryableTopic(kafkaTemplate = "paymentDtoValueKafkaTemplate", attempts = "5", retryTopicSuffix = "-retry-${kafka.consumer-group-id}")
     @KafkaListener(topics = KafkaTopics.DEPOSIT_REFUND_CHECKED, groupId = "${kafka.consumer-group-id}", containerFactory = "paymentDtoValueListenerContainerFactory")
     public void updateToRefunded(PaymentDto paymentDto) {
         Try.run(() -> {

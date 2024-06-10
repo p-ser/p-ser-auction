@@ -25,7 +25,7 @@ public class DepositPaymentValidationCheckedConsumer {
     private final DepositService depositService;
     private final DepositStatusProducer depositStatusProducer;
 
-    @RetryableTopic(kafkaTemplate = "paymentDtoValueKafkaTemplate", attempts = "5")
+    @RetryableTopic(kafkaTemplate = "paymentDtoValueKafkaTemplate", attempts = "5", retryTopicSuffix = "-retry-${kafka.consumer-group-id}")
     @KafkaListener(topics = KafkaTopics.DEPOSIT_PAYMENT_VALIDATION_CHECKED, groupId = "${kafka.consumer-group-id}", containerFactory = "paymentDtoValueListenerContainerFactory")
     public void updateToPaymentValidationChecked(PaymentDto paymentDto) {
         Try.run(() -> check(paymentDto))

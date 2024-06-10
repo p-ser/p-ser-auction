@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class AuctionCreatedRollbackConsumer {
     private final AuctionService auctionService;
 
-    @RetryableTopic(kafkaTemplate = "auctionDtoValueKafkaTemplate", attempts = "5")
+    @RetryableTopic(kafkaTemplate = "auctionDtoValueKafkaTemplate", attempts = "5", retryTopicSuffix = "-retry-${kafka.consumer-group-id}")
     @KafkaListener(topics = KafkaTopics.AUCTION_CREATED_ROLLBACK, groupId = "${kafka.consumer-group-id}", containerFactory = "auctionDtoValueListenerContainerFactory")
     public void rollbackCreated(AuctionDto auctionDto) {
         auctionService.delete(auctionDto.getId());

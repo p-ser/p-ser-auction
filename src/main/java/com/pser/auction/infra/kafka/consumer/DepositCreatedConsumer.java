@@ -1,8 +1,8 @@
 package com.pser.auction.infra.kafka.consumer;
 
-import com.pser.auction.util.Util;
 import com.pser.auction.config.kafka.KafkaTopics;
 import com.pser.auction.infra.quartz.PendingDepositCleanerJob;
+import com.pser.auction.util.Util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobBuilder;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class DepositCreatedConsumer {
     private final Scheduler scheduler;
 
-    @RetryableTopic(kafkaTemplate = "stringValueKafkaTemplate", attempts = "5")
+    @RetryableTopic(kafkaTemplate = "stringValueKafkaTemplate", attempts = "5", retryTopicSuffix = "-retry-${kafka.consumer-group-id}")
     @KafkaListener(topics = KafkaTopics.DEPOSIT_CREATED, groupId = "${kafka.consumer-group-id}", containerFactory = "stringValueListenerContainerFactory")
     public void scheduleJob(String merchantUid) throws SchedulerException {
         JobDataMap jobDataMap = new JobDataMap();

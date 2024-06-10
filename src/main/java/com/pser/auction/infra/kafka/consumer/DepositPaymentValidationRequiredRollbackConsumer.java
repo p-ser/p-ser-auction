@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 public class DepositPaymentValidationRequiredRollbackConsumer {
     private final DepositService depositService;
 
-    @RetryableTopic(kafkaTemplate = "stringValueKafkaTemplate", attempts = "5")
+    @RetryableTopic(kafkaTemplate = "stringValueKafkaTemplate", attempts = "5", retryTopicSuffix = "-retry-${kafka.consumer-group-id}")
     @KafkaListener(topics = KafkaTopics.DEPOSIT_PAYMENT_VALIDATION_REQUIRED_ROLLBACK, groupId = "${kafka.consumer-group-id}", containerFactory = "stringValueListenerContainerFactory")
     public void rollbackPaymentValidationRequired(String merchantUid) {
         Try.run(() -> {

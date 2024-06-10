@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 public class AuctionCreatedConsumer {
     private final Scheduler scheduler;
 
-    @RetryableTopic(kafkaTemplate = "auctionDtoValueKafkaTemplate", attempts = "5")
+    @RetryableTopic(kafkaTemplate = "auctionDtoValueKafkaTemplate", attempts = "5", retryTopicSuffix = "-retry-${kafka.consumer-group-id}")
     @KafkaListener(topics = KafkaTopics.AUCTION_CREATED, groupId = "${kafka.consumer-group-id}", containerFactory = "auctionDtoValueListenerContainerFactory")
     public void scheduleJob(AuctionDto auctionDto) throws SchedulerException {
         Date auctionEndAt = Date.from(auctionDto.getEndAt().atZone(ZoneId.systemDefault()).toInstant());
