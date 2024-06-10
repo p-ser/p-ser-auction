@@ -87,15 +87,21 @@ public class DepositService {
 
     @Transactional
     public void updateStatus(StatusUpdateDto<DepositStatusEnum> statusUpdateDto, Consumer<Deposit> validator) {
-        Deposit reservation = depositDao.findById(statusUpdateDto.getId())
-                .orElseThrow();
+        Deposit deposit;
+        if (statusUpdateDto.getId() != null) {
+            deposit = depositDao.findById(statusUpdateDto.getId())
+                    .orElseThrow();
+        } else {
+            deposit = depositDao.findByMerchantUid(statusUpdateDto.getMerchantUid())
+                    .orElseThrow();
+        }
         DepositStatusEnum targetStatus = statusUpdateDto.getTargetStatus();
 
         if (validator != null) {
-            validator.accept(reservation);
+            validator.accept(deposit);
         }
 
-        reservation.updateStatus(targetStatus);
+        deposit.updateStatus(targetStatus);
     }
 
     @Transactional

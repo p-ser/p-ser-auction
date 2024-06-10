@@ -98,8 +98,14 @@ public class AuctionService {
 
     @Transactional
     public void updateStatus(StatusUpdateDto<AuctionStatusEnum> statusUpdateDto, Consumer<Auction> validator) {
-        Auction auction = auctionDao.findById(statusUpdateDto.getId())
-                .orElseThrow();
+        Auction auction;
+        if (statusUpdateDto.getId() != null) {
+            auction = auctionDao.findById(statusUpdateDto.getId())
+                    .orElseThrow();
+        } else {
+            auction = auctionDao.findByMerchantUid(statusUpdateDto.getMerchantUid())
+                    .orElseThrow();
+        }
         AuctionStatusEnum targetStatus = statusUpdateDto.getTargetStatus();
 
         if (validator != null) {
