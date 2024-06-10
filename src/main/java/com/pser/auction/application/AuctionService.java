@@ -53,22 +53,25 @@ public class AuctionService {
 
     @Transactional
     public long save(AuctionCreateRequest request) {
-        ReservationResponse reservationResponse = hotelClient.getReservationById(request.getReservationId());
-        validateAuctionCreateRequest(reservationResponse);
+        return Try.of(() -> auctionDao.findAuctionByReservationId(request.getReservationId())
+                        .orElseThrow())
+                .recover((e) -> {
+                    ReservationResponse reservationResponse = hotelClient.getReservationById(
+                            request.getReservationId());
+                    validateAuctionCreateRequest(reservationResponse);
 
-        int depositPrice = (int) (reservationResponse.getPrice() / 0.05);
-        LocalDateTime auctionEndAt = LocalDateTime.of(reservationResponse.getStartAt(), LocalTime.MIN);
-        request.setPrice(reservationResponse.getPrice());
-        request.setDepositPrice(depositPrice);
-        request.setEndAt(auctionEndAt);
-        return Try.of(() -> {
+                    int depositPrice = (int) (reservationResponse.getPrice() * 0.05);
+                    LocalDateTime auctionEndAt = LocalDateTime.of(reservationResponse.getStartAt(), LocalTime.MIN);
+                    request.setPrice((int) (reservationResponse.getPrice() * 0.1));
+                    request.setReservationPrice(reservationResponse.getPrice());
+                    request.setDepositPrice(depositPrice);
+                    request.setEndAt(auctionEndAt);
+
                     Auction auction = auctionMapper.toEntity(request);
                     auction.addOnCreatedEventHandler(
                             a -> auctionStatusProducer.produceCreated(auctionMapper.toDto((Auction) a)));
                     return auctionDao.save(auction);
                 })
-                .recover((e) -> auctionDao.findAuctionByReservationId(request.getReservationId())
-                        .orElseThrow())
                 .get()
                 .getId();
     }

@@ -51,7 +51,7 @@ public class AuctionRestApi {
     }
 
     @PostMapping
-    @PreAuthorize("@hotelClient.isReservationOwner(request.reservationId, authId)")
+    @PreAuthorize("@hotelClient.isReservationOwner(#request.reservationId, #authId)")
     public ResponseEntity<Void> save(@RequestHeader("User-Id") long authId,
                                      @Validated @RequestBody AuctionCreateRequest request) {
         request.setAuthId(authId);

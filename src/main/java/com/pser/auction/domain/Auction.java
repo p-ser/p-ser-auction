@@ -22,7 +22,7 @@ import lombok.ToString;
 @Setter
 @Entity
 @NoArgsConstructor
-@ToString(of = {"price", "endPrice", "endAt", "depositPrice", "status"})
+@ToString(of = {"price", "reservationPrice", "endPrice", "endAt", "depositPrice", "status"})
 public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
     @Column(unique = true, nullable = false)
     private long reservationId;
@@ -39,7 +39,10 @@ public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
     private int price;
 
     @Column(nullable = false)
-    private int endPrice;
+    private int reservationPrice;
+
+    @Column
+    private Integer endPrice;
 
     @Column(nullable = false)
     private LocalDateTime endAt;
@@ -60,9 +63,10 @@ public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
     private List<Deposit> deposits = new ArrayList<>();
 
     @Builder
-    public Auction(long reservationId, int price, LocalDateTime endAt, int depositPrice) {
+    public Auction(long reservationId, int price, int reservationPrice, LocalDateTime endAt, int depositPrice) {
         this.reservationId = reservationId;
         this.price = price;
+        this.reservationPrice = reservationPrice;
         this.endAt = endAt;
         this.depositPrice = depositPrice;
     }
@@ -101,8 +105,8 @@ public class Auction extends StatusHolderEntity<AuctionStatusEnum> {
 
     @PrePersist
     private void validate() {
-        if (price > endPrice) {
-            throw new IllegalArgumentException("낙찰가가 경매 시작가보다 클 수 없습니다.");
+        if (price > reservationPrice) {
+            throw new IllegalArgumentException("시작가가 예약 정가보다 클 수 없습니다.");
         }
     }
 }

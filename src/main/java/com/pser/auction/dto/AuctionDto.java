@@ -28,6 +28,8 @@ public class AuctionDto {
 
     private Integer price;
 
+    private Integer reservationPrice;
+
     private Integer endPrice;
 
     private LocalDateTime endAt;

@@ -13,7 +13,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class AuctionCreateRequest {
     @NotNull
-    private long reservationId;
+    private Long reservationId;
 
     @Schema(hidden = true)
     @Null
@@ -21,7 +21,11 @@ public class AuctionCreateRequest {
 
     @Schema(hidden = true)
     @Null
-    private int price;
+    private Integer price;
+
+    @Schema(hidden = true)
+    @Null
+    private Integer reservationPrice;
 
     @Schema(hidden = true)
     @Null
@@ -29,5 +33,5 @@ public class AuctionCreateRequest {
 
     @Schema(hidden = true)
     @Null
-    private int depositPrice;
+    private Integer depositPrice;
 }
