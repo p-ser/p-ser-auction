@@ -47,6 +47,15 @@ public class DepositService {
     }
 
     @Transactional
+    public boolean bidable(Long userId, long auctionId) {
+        if (userId == null) {
+            return false;
+        }
+        return !depositDao.findAllByUserIdAndAuctionIdAndStatus(userId, auctionId, DepositStatusEnum.PAID)
+                .isEmpty();
+    }
+
+    @Transactional
     public DepositResponse getOrSave(DepositCreateRequest request) {
         Auction auction = findOngoingAuctionById(request.getAuctionId());
 

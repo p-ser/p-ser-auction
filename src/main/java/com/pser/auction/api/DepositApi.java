@@ -31,6 +31,13 @@ public class DepositApi {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<Boolean>> bidable(@PathVariable long auctionId,
+                                                        @RequestHeader("User-Id") Long authId) {
+        boolean result = depositService.bidable(authId, auctionId);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<DepositResponse>> save(@PathVariable long auctionId,
                                                              @RequestHeader("User-Id") long authId) {
